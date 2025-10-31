@@ -1,0 +1,46 @@
+{
+    "name": "DS_ADLS_ONS_Raw",
+    "properties": {
+        "linkedServiceName": {
+            "referenceName": "LS_ADLS_OpenBanking",
+            "type": "LinkedServiceReference"
+        },
+        "annotations": [],
+        "type": "DelimitedText",
+        "typeProperties": {
+            "location": {
+                "type": "AzureBlobFSLocation",
+                "fileName": "region_enrichment.csv",
+                "folderPath": "raw/ONS",
+                "fileSystem": "datalake"
+            },
+            "columnDelimiter": ",",
+            "escapeChar": "\\",
+            "firstRowAsHeader": true,
+            "quoteChar": "\""
+        },
+        "schema": [
+            {
+                "name": "RegionCode",
+                "type": "String"
+            },
+            {
+                "name": "RegionName",
+                "type": "String"
+            },
+            {
+                "name": "ONS_DeprivationIndex",
+                "type": "String"
+            },
+            {
+                "name": "MedianIncome",
+                "type": "String"
+            },
+            {
+                "name": "MedianRent",
+                "type": "String"
+            }
+        ]
+    },
+    "type": "Microsoft.DataFactory/factories/datasets"
+}

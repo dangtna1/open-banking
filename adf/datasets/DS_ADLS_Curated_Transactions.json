@@ -1,0 +1,39 @@
+{
+    "name": "DS_ADLS_Curated_Transactions",
+    "properties": {
+        "linkedServiceName": {
+            "referenceName": "LS_ADLS_OpenBanking",
+            "type": "LinkedServiceReference"
+        },
+        "parameters": {
+            "MonthCode": {
+                "type": "string"
+            }
+        },
+        "annotations": [],
+        "type": "DelimitedText",
+        "typeProperties": {
+            "location": {
+                "type": "AzureBlobFSLocation",
+                "fileName": {
+                    "value": "transactions_@{dataset().MonthCode}.csv",
+                    "type": "Expression"
+                },
+                "folderPath": {
+                    "value": "curated/transactions/@{dataset().MonthCode}",
+                    "type": "Expression"
+                },
+                "fileSystem": {
+                    "value": "datalake",
+                    "type": "Expression"
+                }
+            },
+            "columnDelimiter": ",",
+            "escapeChar": "\\",
+            "firstRowAsHeader": true,
+            "quoteChar": "\""
+        },
+        "schema": []
+    },
+    "type": "Microsoft.DataFactory/factories/datasets"
+}

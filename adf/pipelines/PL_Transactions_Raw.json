@@ -1,0 +1,435 @@
+{
+  "name": "PL_Transactions_Raw",
+  "properties": {
+    "activities": [
+      {
+        "name": "Transactions_RawToCurated_Month_1",
+        "type": "Copy",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "userProperties": [],
+        "typeProperties": {
+          "source": {
+            "type": "DelimitedTextSource",
+            "storeSettings": {
+              "type": "AzureBlobFSReadSettings",
+              "recursive": true,
+              "enablePartitionDiscovery": false
+            },
+            "formatSettings": {
+              "type": "DelimitedTextReadSettings"
+            }
+          },
+          "sink": {
+            "type": "DelimitedTextSink",
+            "storeSettings": {
+              "type": "AzureBlobFSWriteSettings",
+              "copyBehavior": "FlattenHierarchy"
+            },
+            "formatSettings": {
+              "type": "DelimitedTextWriteSettings",
+              "quoteAllText": true,
+              "fileExtension": ".txt"
+            }
+          },
+          "enableStaging": false,
+          "translator": {
+            "type": "TabularTranslator",
+            "typeConversion": true,
+            "typeConversionSettings": {
+              "allowDataTruncation": true,
+              "treatBooleanAsNumber": false
+            }
+          }
+        },
+        "inputs": [
+          {
+            "referenceName": "DS_ALDS_Transactions_Raw",
+            "type": "DatasetReference",
+            "parameters": {
+              "MonthCode": "202501"
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "referenceName": "DS_ADLS_Curated_Transactions",
+            "type": "DatasetReference",
+            "parameters": {
+              "MonthCode": "202501"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Transactions_RawToCurated_Month_2",
+        "type": "Copy",
+        "dependsOn": [
+          {
+            "activity": "Transactions_RawToCurated_Month_1",
+            "dependencyConditions": [
+              "Completed"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "userProperties": [],
+        "typeProperties": {
+          "source": {
+            "type": "DelimitedTextSource",
+            "storeSettings": {
+              "type": "AzureBlobFSReadSettings",
+              "recursive": true,
+              "enablePartitionDiscovery": false
+            },
+            "formatSettings": {
+              "type": "DelimitedTextReadSettings"
+            }
+          },
+          "sink": {
+            "type": "DelimitedTextSink",
+            "storeSettings": {
+              "type": "AzureBlobFSWriteSettings",
+              "copyBehavior": "FlattenHierarchy"
+            },
+            "formatSettings": {
+              "type": "DelimitedTextWriteSettings",
+              "quoteAllText": true,
+              "fileExtension": ".txt"
+            }
+          },
+          "enableStaging": false,
+          "translator": {
+            "type": "TabularTranslator",
+            "typeConversion": true,
+            "typeConversionSettings": {
+              "allowDataTruncation": true,
+              "treatBooleanAsNumber": false
+            }
+          }
+        },
+        "inputs": [
+          {
+            "referenceName": "DS_ALDS_Transactions_Raw",
+            "type": "DatasetReference",
+            "parameters": {
+              "MonthCode": "202502"
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "referenceName": "DS_ADLS_Curated_Transactions",
+            "type": "DatasetReference",
+            "parameters": {
+              "MonthCode": "202502"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Transactions_RawToCurated_Month_3",
+        "type": "Copy",
+        "dependsOn": [
+          {
+            "activity": "Transactions_RawToCurated_Month_2",
+            "dependencyConditions": [
+              "Completed"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "userProperties": [],
+        "typeProperties": {
+          "source": {
+            "type": "DelimitedTextSource",
+            "storeSettings": {
+              "type": "AzureBlobFSReadSettings",
+              "recursive": true,
+              "enablePartitionDiscovery": false
+            },
+            "formatSettings": {
+              "type": "DelimitedTextReadSettings"
+            }
+          },
+          "sink": {
+            "type": "DelimitedTextSink",
+            "storeSettings": {
+              "type": "AzureBlobFSWriteSettings",
+              "copyBehavior": "FlattenHierarchy"
+            },
+            "formatSettings": {
+              "type": "DelimitedTextWriteSettings",
+              "quoteAllText": true,
+              "fileExtension": ".txt"
+            }
+          },
+          "enableStaging": false,
+          "translator": {
+            "type": "TabularTranslator",
+            "typeConversion": true,
+            "typeConversionSettings": {
+              "allowDataTruncation": true,
+              "treatBooleanAsNumber": false
+            }
+          }
+        },
+        "inputs": [
+          {
+            "referenceName": "DS_ALDS_Transactions_Raw",
+            "type": "DatasetReference",
+            "parameters": {
+              "MonthCode": "202503"
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "referenceName": "DS_ADLS_Curated_Transactions",
+            "type": "DatasetReference",
+            "parameters": {
+              "MonthCode": "202503"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Transactions_RawToCurated_Month_6",
+        "type": "Copy",
+        "dependsOn": [
+          {
+            "activity": "Transactions_RawToCurated_Month_5",
+            "dependencyConditions": [
+              "Completed"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "userProperties": [],
+        "typeProperties": {
+          "source": {
+            "type": "DelimitedTextSource",
+            "storeSettings": {
+              "type": "AzureBlobFSReadSettings",
+              "recursive": true,
+              "enablePartitionDiscovery": false
+            },
+            "formatSettings": {
+              "type": "DelimitedTextReadSettings"
+            }
+          },
+          "sink": {
+            "type": "DelimitedTextSink",
+            "storeSettings": {
+              "type": "AzureBlobFSWriteSettings",
+              "copyBehavior": "FlattenHierarchy"
+            },
+            "formatSettings": {
+              "type": "DelimitedTextWriteSettings",
+              "quoteAllText": true,
+              "fileExtension": ".txt"
+            }
+          },
+          "enableStaging": false,
+          "translator": {
+            "type": "TabularTranslator",
+            "typeConversion": true,
+            "typeConversionSettings": {
+              "allowDataTruncation": true,
+              "treatBooleanAsNumber": false
+            }
+          }
+        },
+        "inputs": [
+          {
+            "referenceName": "DS_ALDS_Transactions_Raw",
+            "type": "DatasetReference",
+            "parameters": {
+              "MonthCode": "202506"
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "referenceName": "DS_ADLS_Curated_Transactions",
+            "type": "DatasetReference",
+            "parameters": {
+              "MonthCode": "202506"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Transactions_RawToCurated_Month_5",
+        "type": "Copy",
+        "dependsOn": [
+          {
+            "activity": "Transactions_RawToCurated_Month_4",
+            "dependencyConditions": [
+              "Completed"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "userProperties": [],
+        "typeProperties": {
+          "source": {
+            "type": "DelimitedTextSource",
+            "storeSettings": {
+              "type": "AzureBlobFSReadSettings",
+              "recursive": true,
+              "enablePartitionDiscovery": false
+            },
+            "formatSettings": {
+              "type": "DelimitedTextReadSettings"
+            }
+          },
+          "sink": {
+            "type": "DelimitedTextSink",
+            "storeSettings": {
+              "type": "AzureBlobFSWriteSettings",
+              "copyBehavior": "FlattenHierarchy"
+            },
+            "formatSettings": {
+              "type": "DelimitedTextWriteSettings",
+              "quoteAllText": true,
+              "fileExtension": ".txt"
+            }
+          },
+          "enableStaging": false,
+          "translator": {
+            "type": "TabularTranslator",
+            "typeConversion": true,
+            "typeConversionSettings": {
+              "allowDataTruncation": true,
+              "treatBooleanAsNumber": false
+            }
+          }
+        },
+        "inputs": [
+          {
+            "referenceName": "DS_ALDS_Transactions_Raw",
+            "type": "DatasetReference",
+            "parameters": {
+              "MonthCode": "202505"
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "referenceName": "DS_ADLS_Curated_Transactions",
+            "type": "DatasetReference",
+            "parameters": {
+              "MonthCode": "202505"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Transactions_RawToCurated_Month_4",
+        "type": "Copy",
+        "dependsOn": [
+          {
+            "activity": "Transactions_RawToCurated_Month_3",
+            "dependencyConditions": [
+              "Completed"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "userProperties": [],
+        "typeProperties": {
+          "source": {
+            "type": "DelimitedTextSource",
+            "storeSettings": {
+              "type": "AzureBlobFSReadSettings",
+              "recursive": true,
+              "enablePartitionDiscovery": false
+            },
+            "formatSettings": {
+              "type": "DelimitedTextReadSettings"
+            }
+          },
+          "sink": {
+            "type": "DelimitedTextSink",
+            "storeSettings": {
+              "type": "AzureBlobFSWriteSettings",
+              "copyBehavior": "FlattenHierarchy"
+            },
+            "formatSettings": {
+              "type": "DelimitedTextWriteSettings",
+              "quoteAllText": true,
+              "fileExtension": ".txt"
+            }
+          },
+          "enableStaging": false,
+          "translator": {
+            "type": "TabularTranslator",
+            "typeConversion": true,
+            "typeConversionSettings": {
+              "allowDataTruncation": true,
+              "treatBooleanAsNumber": false
+            }
+          }
+        },
+        "inputs": [
+          {
+            "referenceName": "DS_ALDS_Transactions_Raw",
+            "type": "DatasetReference",
+            "parameters": {
+              "MonthCode": "202504"
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "referenceName": "DS_ADLS_Curated_Transactions",
+            "type": "DatasetReference",
+            "parameters": {
+              "MonthCode": "202504"
+            }
+          }
+        ]
+      }
+    ],
+    "annotations": [],
+    "lastPublishTime": "2025-10-29T13:57:33Z"
+  },
+  "type": "Microsoft.DataFactory/factories/pipelines"
+}
