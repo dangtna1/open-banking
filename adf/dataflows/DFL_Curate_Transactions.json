@@ -1,0 +1,88 @@
+{
+    "name": "DFL_Curate_Transactions",
+    "properties": {
+        "type": "MappingDataFlow",
+        "typeProperties": {
+            "sources": [
+                {
+                    "dataset": {
+                        "referenceName": "DS_ALDS_Transactions_Raw",
+                        "type": "DatasetReference"
+                    },
+                    "name": "srcTransactions"
+                }
+            ],
+            "sinks": [
+                {
+                    "dataset": {
+                        "referenceName": "DS_ADLS_Curated_Transactions",
+                        "type": "DatasetReference"
+                    },
+                    "name": "snkCuratedTransactions"
+                }
+            ],
+            "transformations": [
+                {
+                    "name": "drvIsSalary"
+                },
+                {
+                    "name": "drvIsRecurring"
+                },
+                {
+                    "name": "selColumns"
+                }
+            ],
+            "scriptLines": [
+                "source(output(",
+                "          TransactionID as string,",
+                "          AccountID as string,",
+                "          CustomerID as string,",
+                "          Amount as string,",
+                "          Currency as string,",
+                "          MerchantName as string,",
+                "          MCC as string,",
+                "          Category as string,",
+                "          Channel as string,",
+                "          City as string,",
+                "          RegionCode as string,",
+                "          IsRefund as string,",
+                "          TransactionDate as string,",
+                "          BalanceAfter as string",
+                "     ),",
+                "     allowSchemaDrift: true,",
+                "     validateSchema: false,",
+                "     ignoreNoFilesFound: false) ~> srcTransactions",
+                "srcTransactions derive(IsSalary = iif((MerchantName == 'Employer Ltd' || toInteger(MCC) == 6011) && toDecimal(Amount) > 0, true(), false())) ~> drvIsSalary",
+                "drvIsSalary derive(IsRecurring = iif(IsSalary == true() || Category == 'Utilities' || Category == 'Subscriptions' || Category == 'Housing', true(), false())) ~> drvIsRecurring",
+                "drvIsRecurring select(mapColumn(",
+                "          TransactionID,",
+                "          AccountID,",
+                "          CustomerID,",
+                "          Amount,",
+                "          Currency,",
+                "          MerchantName,",
+                "          MCC,",
+                "          Category,",
+                "          Channel,",
+                "          City,",
+                "          RegionCode,",
+                "          IsRecurring,",
+                "          IsRefund,",
+                "          IsSalary,",
+                "          TransactionDate,",
+                "          BalanceAfter",
+                "     ),",
+                "     skipDuplicateMapInputs: true,",
+                "     skipDuplicateMapOutputs: true) ~> selColumns",
+                "selColumns sink(allowSchemaDrift: true,",
+                "     validateSchema: false,",
+                "     truncate: true,",
+                "     umask: 0022,",
+                "     preCommands: [],",
+                "     postCommands: [],",
+                "     skipDuplicateMapInputs: true,",
+                "     skipDuplicateMapOutputs: true) ~> snkCuratedTransactions"
+            ]
+        }
+    }
+}

@@ -1,0 +1,46 @@
+{
+    "name": "DFL_Curate_ONS",
+    "properties": {
+        "type": "MappingDataFlow",
+        "typeProperties": {
+            "sources": [
+                {
+                    "dataset": {
+                        "referenceName": "DS_ADLS_ONS_Raw",
+                        "type": "DatasetReference"
+                    },
+                    "name": "srcONS"
+                }
+            ],
+            "sinks": [
+                {
+                    "dataset": {
+                        "referenceName": "DS_ADLS_Curated_ONS",
+                        "type": "DatasetReference"
+                    },
+                    "name": "snkONS"
+                }
+            ],
+            "transformations": [],
+            "scriptLines": [
+                "source(output(",
+                "          RegionCode as string,",
+                "          RegionName as string,",
+                "          ONS_DeprivationIndex as string,",
+                "          MedianIncome as string,",
+                "          MedianRent as string",
+                "     ),",
+                "     allowSchemaDrift: true,",
+                "     validateSchema: false,",
+                "     ignoreNoFilesFound: false) ~> srcONS",
+                "srcONS sink(allowSchemaDrift: true,",
+                "     validateSchema: false,",
+                "     umask: 0022,",
+                "     preCommands: [],",
+                "     postCommands: [],",
+                "     skipDuplicateMapInputs: true,",
+                "     skipDuplicateMapOutputs: true) ~> snkONS"
+            ]
+        }
+    }
+}

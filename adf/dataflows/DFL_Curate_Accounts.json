@@ -1,0 +1,47 @@
+{
+    "name": "DFL_Curate_Accounts",
+    "properties": {
+        "type": "MappingDataFlow",
+        "typeProperties": {
+            "sources": [
+                {
+                    "dataset": {
+                        "referenceName": "DS_ADLS_Accounts_Raw",
+                        "type": "DatasetReference"
+                    },
+                    "name": "srcAccounts"
+                }
+            ],
+            "sinks": [
+                {
+                    "dataset": {
+                        "referenceName": "DS_ADLS_Curated_Accounts",
+                        "type": "DatasetReference"
+                    },
+                    "name": "snkAccounts"
+                }
+            ],
+            "transformations": [],
+            "scriptLines": [
+                "source(output(",
+                "          AccountID as string,",
+                "          CustomerID as string,",
+                "          ProductType as string,",
+                "          OpenDate as string,",
+                "          IsStudent as string,",
+                "          IsJoint as string",
+                "     ),",
+                "     allowSchemaDrift: true,",
+                "     validateSchema: false,",
+                "     ignoreNoFilesFound: false) ~> srcAccounts",
+                "srcAccounts sink(allowSchemaDrift: true,",
+                "     validateSchema: false,",
+                "     umask: 0772,",
+                "     preCommands: [],",
+                "     postCommands: [],",
+                "     skipDuplicateMapInputs: true,",
+                "     skipDuplicateMapOutputs: true) ~> snkAccounts"
+            ]
+        }
+    }
+}
