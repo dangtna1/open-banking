@@ -1,0 +1,61 @@
+{
+    "name": "DS_SQL_dim_customer",
+    "properties": {
+        "linkedServiceName": {
+            "referenceName": "LS_SQL_OpenBanking",
+            "type": "LinkedServiceReference"
+        },
+        "annotations": [],
+        "type": "AzureSqlTable",
+        "schema": [
+            {
+                "name": "CustomerID",
+                "type": "int",
+                "precision": 10
+            },
+            {
+                "name": "FullName",
+                "type": "nvarchar"
+            },
+            {
+                "name": "Age",
+                "type": "int",
+                "precision": 10
+            },
+            {
+                "name": "AgeBand",
+                "type": "nvarchar"
+            },
+            {
+                "name": "IncomeMonthly",
+                "type": "float",
+                "precision": 15
+            },
+            {
+                "name": "IncomeBand",
+                "type": "nvarchar"
+            },
+            {
+                "name": "City",
+                "type": "nvarchar"
+            },
+            {
+                "name": "RegionCode",
+                "type": "nvarchar"
+            },
+            {
+                "name": "Persona",
+                "type": "nvarchar"
+            },
+            {
+                "name": "RiskSegment",
+                "type": "nvarchar"
+            }
+        ],
+        "typeProperties": {
+            "schema": "dbo",
+            "table": "dim_customers"
+        }
+    },
+    "type": "Microsoft.DataFactory/factories/datasets"
+}

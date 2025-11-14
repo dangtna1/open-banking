@@ -7,7 +7,8 @@
         },
         "parameters": {
             "MonthCode": {
-                "type": "string"
+                "type": "string",
+                "defaultValue": "202501"
             }
         },
         "annotations": [],
@@ -32,6 +33,10 @@
         },
         "schema": [
             {
+                "name": "TransactionID",
+                "type": "String"
+            },
+            {
                 "name": "AccountID",
                 "type": "String"
             },
@@ -40,19 +45,47 @@
                 "type": "String"
             },
             {
-                "name": "ProductType",
+                "name": "Amount",
                 "type": "String"
             },
             {
-                "name": "OpenDate",
+                "name": "Currency",
                 "type": "String"
             },
             {
-                "name": "IsStudent",
+                "name": "MerchantName",
                 "type": "String"
             },
             {
-                "name": "IsJoint",
+                "name": "MCC",
+                "type": "String"
+            },
+            {
+                "name": "Category",
+                "type": "String"
+            },
+            {
+                "name": "Channel",
+                "type": "String"
+            },
+            {
+                "name": "City",
+                "type": "String"
+            },
+            {
+                "name": "RegionCode",
+                "type": "String"
+            },
+            {
+                "name": "IsRefund",
+                "type": "String"
+            },
+            {
+                "name": "TransactionDate",
+                "type": "String"
+            },
+            {
+                "name": "BalanceAfter",
                 "type": "String"
             }
         ]

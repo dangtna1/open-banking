@@ -1,0 +1,93 @@
+{
+    "name": "DS_SQL_fact_transaction",
+    "properties": {
+        "linkedServiceName": {
+            "referenceName": "LS_SQL_OpenBanking",
+            "type": "LinkedServiceReference"
+        },
+        "annotations": [],
+        "type": "AzureSqlTable",
+        "schema": [
+            {
+                "name": "TransactionID",
+                "type": "bigint",
+                "precision": 19
+            },
+            {
+                "name": "AccountID",
+                "type": "int",
+                "precision": 10
+            },
+            {
+                "name": "CustomerID",
+                "type": "int",
+                "precision": 10
+            },
+            {
+                "name": "Amount",
+                "type": "decimal",
+                "precision": 12,
+                "scale": 2
+            },
+            {
+                "name": "Currency",
+                "type": "nvarchar"
+            },
+            {
+                "name": "MerchantName",
+                "type": "nvarchar"
+            },
+            {
+                "name": "MCC",
+                "type": "int",
+                "precision": 10
+            },
+            {
+                "name": "Category",
+                "type": "nvarchar"
+            },
+            {
+                "name": "Channel",
+                "type": "nvarchar"
+            },
+            {
+                "name": "City",
+                "type": "nvarchar"
+            },
+            {
+                "name": "RegionCode",
+                "type": "nvarchar"
+            },
+            {
+                "name": "IsRecurring",
+                "type": "bit"
+            },
+            {
+                "name": "IsRefund",
+                "type": "int",
+                "precision": 10
+            },
+            {
+                "name": "IsSalary",
+                "type": "bit"
+            },
+            {
+                "name": "BalanceAfter",
+                "type": "decimal",
+                "precision": 12,
+                "scale": 2
+            },
+            {
+                "name": "TransactionDate",
+                "type": "datetime",
+                "precision": 23,
+                "scale": 3
+            }
+        ],
+        "typeProperties": {
+            "schema": "dbo",
+            "table": "fact_transactions"
+        }
+    },
+    "type": "Microsoft.DataFactory/factories/datasets"
+}

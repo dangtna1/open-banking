@@ -1,0 +1,126 @@
+{
+    "name": "PL_Load_SQL_ONS",
+    "properties": {
+        "activities": [
+            {
+                "name": "ONS_CuratedToSQL",
+                "type": "Copy",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "source": {
+                        "type": "DelimitedTextSource",
+                        "storeSettings": {
+                            "type": "AzureBlobFSReadSettings",
+                            "recursive": true,
+                            "enablePartitionDiscovery": false
+                        },
+                        "formatSettings": {
+                            "type": "DelimitedTextReadSettings"
+                        }
+                    },
+                    "sink": {
+                        "type": "AzureSqlSink",
+                        "writeBehavior": "insert",
+                        "sqlWriterUseTableLock": false
+                    },
+                    "enableStaging": false,
+                    "translator": {
+                        "type": "TabularTranslator",
+                        "mappings": [
+                            {
+                                "source": {
+                                    "name": "RegionCode",
+                                    "type": "String",
+                                    "physicalType": "String"
+                                },
+                                "sink": {
+                                    "name": "RegionCode",
+                                    "type": "String",
+                                    "physicalType": "nvarchar"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "RegionName",
+                                    "type": "String",
+                                    "physicalType": "String"
+                                },
+                                "sink": {
+                                    "name": "RegionName",
+                                    "type": "String",
+                                    "physicalType": "nvarchar"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "ONS_DeprivationIndex",
+                                    "type": "String",
+                                    "physicalType": "String"
+                                },
+                                "sink": {
+                                    "name": "ONS_DeprivationIndex",
+                                    "type": "Decimal",
+                                    "physicalType": "decimal",
+                                    "scale": 2,
+                                    "precision": 5
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "MedianIncome",
+                                    "type": "String",
+                                    "physicalType": "String"
+                                },
+                                "sink": {
+                                    "name": "MedianIncome",
+                                    "type": "Int32",
+                                    "physicalType": "int"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "MedianRent",
+                                    "type": "String",
+                                    "physicalType": "String"
+                                },
+                                "sink": {
+                                    "name": "MedianRent",
+                                    "type": "Int32",
+                                    "physicalType": "int"
+                                }
+                            }
+                        ],
+                        "typeConversion": true,
+                        "typeConversionSettings": {
+                            "allowDataTruncation": true,
+                            "treatBooleanAsNumber": false
+                        }
+                    }
+                },
+                "inputs": [
+                    {
+                        "referenceName": "DS_ADLS_Curated_ONS",
+                        "type": "DatasetReference"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "referenceName": "DS_SQL_dim_ons",
+                        "type": "DatasetReference"
+                    }
+                ]
+            }
+        ],
+        "annotations": [],
+        "lastPublishTime": "2025-11-07T14:32:10Z"
+    },
+    "type": "Microsoft.DataFactory/factories/pipelines"
+}

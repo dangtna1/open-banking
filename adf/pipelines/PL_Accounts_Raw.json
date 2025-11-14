@@ -1,70 +1,70 @@
 {
-  "name": "PL_Accounts_Raw",
-  "properties": {
-    "description": "Copy raw accounts data from /raw to /curated",
-    "activities": [
-      {
-        "name": "Accounts_RawToCurated",
-        "type": "Copy",
-        "dependsOn": [],
-        "policy": {
-          "timeout": "0.12:00:00",
-          "retry": 0,
-          "retryIntervalInSeconds": 30,
-          "secureOutput": false,
-          "secureInput": false
-        },
-        "userProperties": [],
-        "typeProperties": {
-          "source": {
-            "type": "DelimitedTextSource",
-            "storeSettings": {
-              "type": "AzureBlobFSReadSettings",
-              "recursive": true,
-              "enablePartitionDiscovery": false
-            },
-            "formatSettings": {
-              "type": "DelimitedTextReadSettings"
+    "name": "PL_Accounts_Raw",
+    "properties": {
+        "description": "Copy raw accounts data from /raw to /curated",
+        "activities": [
+            {
+                "name": "Accounts_RawToCurated",
+                "type": "Copy",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "source": {
+                        "type": "DelimitedTextSource",
+                        "storeSettings": {
+                            "type": "AzureBlobFSReadSettings",
+                            "recursive": true,
+                            "enablePartitionDiscovery": false
+                        },
+                        "formatSettings": {
+                            "type": "DelimitedTextReadSettings"
+                        }
+                    },
+                    "sink": {
+                        "type": "DelimitedTextSink",
+                        "storeSettings": {
+                            "type": "AzureBlobFSWriteSettings",
+                            "copyBehavior": "FlattenHierarchy"
+                        },
+                        "formatSettings": {
+                            "type": "DelimitedTextWriteSettings",
+                            "quoteAllText": true,
+                            "fileExtension": ".txt"
+                        }
+                    },
+                    "enableStaging": false,
+                    "translator": {
+                        "type": "TabularTranslator",
+                        "typeConversion": true,
+                        "typeConversionSettings": {
+                            "allowDataTruncation": true,
+                            "treatBooleanAsNumber": false
+                        }
+                    }
+                },
+                "inputs": [
+                    {
+                        "referenceName": "DS_ADLS_Accounts_Raw",
+                        "type": "DatasetReference"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "referenceName": "DS_ADLS_Curated_Accounts",
+                        "type": "DatasetReference"
+                    }
+                ]
             }
-          },
-          "sink": {
-            "type": "DelimitedTextSink",
-            "storeSettings": {
-              "type": "AzureBlobFSWriteSettings",
-              "copyBehavior": "FlattenHierarchy"
-            },
-            "formatSettings": {
-              "type": "DelimitedTextWriteSettings",
-              "quoteAllText": true,
-              "fileExtension": ".txt"
-            }
-          },
-          "enableStaging": false,
-          "translator": {
-            "type": "TabularTranslator",
-            "typeConversion": true,
-            "typeConversionSettings": {
-              "allowDataTruncation": true,
-              "treatBooleanAsNumber": false
-            }
-          }
-        },
-        "inputs": [
-          {
-            "referenceName": "DS_ADLS_Accounts_Raw",
-            "type": "DatasetReference"
-          }
         ],
-        "outputs": [
-          {
-            "referenceName": "DS_ADLS_Curated_Accounts",
-            "type": "DatasetReference"
-          }
-        ]
-      }
-    ],
-    "annotations": [],
-    "lastPublishTime": "2025-10-28T20:01:44Z"
-  },
-  "type": "Microsoft.DataFactory/factories/pipelines"
+        "annotations": [],
+        "lastPublishTime": "2025-10-28T20:01:44Z"
+    },
+    "type": "Microsoft.DataFactory/factories/pipelines"
 }

@@ -1,0 +1,46 @@
+{
+    "name": "DS_SQL_dim_account",
+    "properties": {
+        "linkedServiceName": {
+            "referenceName": "LS_SQL_OpenBanking",
+            "type": "LinkedServiceReference"
+        },
+        "annotations": [],
+        "type": "AzureSqlTable",
+        "schema": [
+            {
+                "name": "AccountID",
+                "type": "int",
+                "precision": 10
+            },
+            {
+                "name": "CustomerID",
+                "type": "int",
+                "precision": 10
+            },
+            {
+                "name": "ProductType",
+                "type": "nvarchar"
+            },
+            {
+                "name": "OpenDate",
+                "type": "date"
+            },
+            {
+                "name": "IsStudent",
+                "type": "int",
+                "precision": 10
+            },
+            {
+                "name": "IsJoint",
+                "type": "int",
+                "precision": 10
+            }
+        ],
+        "typeProperties": {
+            "schema": "dbo",
+            "table": "dim_accounts"
+        }
+    },
+    "type": "Microsoft.DataFactory/factories/datasets"
+}

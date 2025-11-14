@@ -7,7 +7,8 @@
         },
         "parameters": {
             "MonthCode": {
-                "type": "string"
+                "type": "string",
+                "defaultValue": "202501"
             }
         },
         "annotations": [],
@@ -23,10 +24,7 @@
                     "value": "curated/transactions/@{dataset().MonthCode}",
                     "type": "Expression"
                 },
-                "fileSystem": {
-                    "value": "datalake",
-                    "type": "Expression"
-                }
+                "fileSystem": "datalake"
             },
             "columnDelimiter": ",",
             "escapeChar": "\\",

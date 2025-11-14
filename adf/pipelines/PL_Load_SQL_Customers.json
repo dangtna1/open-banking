@@ -1,0 +1,185 @@
+{
+    "name": "PL_Load_SQL_Customers",
+    "properties": {
+        "activities": [
+            {
+                "name": "Customers_CuratedToSQL",
+                "type": "Copy",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "source": {
+                        "type": "DelimitedTextSource",
+                        "storeSettings": {
+                            "type": "AzureBlobFSReadSettings",
+                            "recursive": true,
+                            "enablePartitionDiscovery": false
+                        },
+                        "formatSettings": {
+                            "type": "DelimitedTextReadSettings"
+                        }
+                    },
+                    "sink": {
+                        "type": "AzureSqlSink",
+                        "writeBehavior": "insert",
+                        "sqlWriterUseTableLock": false,
+                        "disableMetricsCollection": false
+                    },
+                    "enableStaging": false,
+                    "translator": {
+                        "type": "TabularTranslator",
+                        "mappings": [
+                            {
+                                "source": {
+                                    "name": "CustomerID",
+                                    "type": "String",
+                                    "physicalType": "String"
+                                },
+                                "sink": {
+                                    "name": "CustomerID",
+                                    "type": "Int32",
+                                    "physicalType": "int"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "FullName",
+                                    "type": "String",
+                                    "physicalType": "String"
+                                },
+                                "sink": {
+                                    "name": "FullName",
+                                    "type": "String",
+                                    "physicalType": "nvarchar"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "Age",
+                                    "type": "String",
+                                    "physicalType": "String"
+                                },
+                                "sink": {
+                                    "name": "Age",
+                                    "type": "Int32",
+                                    "physicalType": "int"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "AgeBand",
+                                    "type": "String",
+                                    "physicalType": "String"
+                                },
+                                "sink": {
+                                    "name": "AgeBand",
+                                    "type": "String",
+                                    "physicalType": "nvarchar"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "IncomeMonthly",
+                                    "type": "String",
+                                    "physicalType": "String"
+                                },
+                                "sink": {
+                                    "name": "IncomeMonthly",
+                                    "type": "Double",
+                                    "physicalType": "float"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "IncomeBand",
+                                    "type": "String",
+                                    "physicalType": "String"
+                                },
+                                "sink": {
+                                    "name": "IncomeBand",
+                                    "type": "String",
+                                    "physicalType": "nvarchar"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "City",
+                                    "type": "String",
+                                    "physicalType": "String"
+                                },
+                                "sink": {
+                                    "name": "City",
+                                    "type": "String",
+                                    "physicalType": "nvarchar"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "RegionCode",
+                                    "type": "String",
+                                    "physicalType": "String"
+                                },
+                                "sink": {
+                                    "name": "RegionCode",
+                                    "type": "String",
+                                    "physicalType": "nvarchar"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "Persona",
+                                    "type": "String",
+                                    "physicalType": "String"
+                                },
+                                "sink": {
+                                    "name": "Persona",
+                                    "type": "String",
+                                    "physicalType": "nvarchar"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "RiskSegment",
+                                    "type": "String",
+                                    "physicalType": "String"
+                                },
+                                "sink": {
+                                    "name": "RiskSegment",
+                                    "type": "String",
+                                    "physicalType": "nvarchar"
+                                }
+                            }
+                        ],
+                        "typeConversion": true,
+                        "typeConversionSettings": {
+                            "allowDataTruncation": true,
+                            "treatBooleanAsNumber": false
+                        }
+                    }
+                },
+                "inputs": [
+                    {
+                        "referenceName": "DS_ADLS_Curated_Customers",
+                        "type": "DatasetReference"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "referenceName": "DS_SQL_dim_customer",
+                        "type": "DatasetReference"
+                    }
+                ]
+            }
+        ],
+        "annotations": [],
+        "lastPublishTime": "2025-11-06T21:15:43Z"
+    },
+    "type": "Microsoft.DataFactory/factories/pipelines"
+}

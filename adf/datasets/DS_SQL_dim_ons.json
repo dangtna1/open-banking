@@ -1,0 +1,42 @@
+{
+    "name": "DS_SQL_dim_ons",
+    "properties": {
+        "linkedServiceName": {
+            "referenceName": "LS_SQL_OpenBanking",
+            "type": "LinkedServiceReference"
+        },
+        "annotations": [],
+        "type": "AzureSqlTable",
+        "schema": [
+            {
+                "name": "RegionCode",
+                "type": "nvarchar"
+            },
+            {
+                "name": "RegionName",
+                "type": "nvarchar"
+            },
+            {
+                "name": "ONS_DeprivationIndex",
+                "type": "decimal",
+                "precision": 5,
+                "scale": 2
+            },
+            {
+                "name": "MedianIncome",
+                "type": "int",
+                "precision": 10
+            },
+            {
+                "name": "MedianRent",
+                "type": "int",
+                "precision": 10
+            }
+        ],
+        "typeProperties": {
+            "schema": "dbo",
+            "table": "dim_region"
+        }
+    },
+    "type": "Microsoft.DataFactory/factories/datasets"
+}

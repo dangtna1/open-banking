@@ -1,0 +1,136 @@
+{
+    "name": "PL_Load_SQL_Accounts",
+    "properties": {
+        "activities": [
+            {
+                "name": "Accounts_CuratedToSQL",
+                "type": "Copy",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "source": {
+                        "type": "DelimitedTextSource",
+                        "storeSettings": {
+                            "type": "AzureBlobFSReadSettings",
+                            "recursive": true,
+                            "enablePartitionDiscovery": false
+                        },
+                        "formatSettings": {
+                            "type": "DelimitedTextReadSettings"
+                        }
+                    },
+                    "sink": {
+                        "type": "AzureSqlSink",
+                        "writeBehavior": "insert",
+                        "sqlWriterUseTableLock": false
+                    },
+                    "enableStaging": false,
+                    "translator": {
+                        "type": "TabularTranslator",
+                        "mappings": [
+                            {
+                                "source": {
+                                    "name": "AccountID",
+                                    "type": "String",
+                                    "physicalType": "String"
+                                },
+                                "sink": {
+                                    "name": "AccountID",
+                                    "type": "Int32",
+                                    "physicalType": "int"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "CustomerID",
+                                    "type": "String",
+                                    "physicalType": "String"
+                                },
+                                "sink": {
+                                    "name": "CustomerID",
+                                    "type": "Int32",
+                                    "physicalType": "int"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "ProductType",
+                                    "type": "String",
+                                    "physicalType": "String"
+                                },
+                                "sink": {
+                                    "name": "ProductType",
+                                    "type": "String",
+                                    "physicalType": "nvarchar"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "OpenDate",
+                                    "type": "String",
+                                    "physicalType": "String"
+                                },
+                                "sink": {
+                                    "name": "OpenDate",
+                                    "type": "Date",
+                                    "physicalType": "date"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "IsStudent",
+                                    "type": "String",
+                                    "physicalType": "String"
+                                },
+                                "sink": {
+                                    "name": "IsStudent",
+                                    "type": "Int32",
+                                    "physicalType": "int"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "IsJoint",
+                                    "type": "String",
+                                    "physicalType": "String"
+                                },
+                                "sink": {
+                                    "name": "IsJoint",
+                                    "type": "Int32",
+                                    "physicalType": "int"
+                                }
+                            }
+                        ],
+                        "typeConversion": true,
+                        "typeConversionSettings": {
+                            "allowDataTruncation": true,
+                            "treatBooleanAsNumber": false
+                        }
+                    }
+                },
+                "inputs": [
+                    {
+                        "referenceName": "DS_ADLS_Curated_Accounts",
+                        "type": "DatasetReference"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "referenceName": "DS_SQL_dim_account",
+                        "type": "DatasetReference"
+                    }
+                ]
+            }
+        ],
+        "annotations": [],
+        "lastPublishTime": "2025-11-07T13:45:04Z"
+    },
+    "type": "Microsoft.DataFactory/factories/pipelines"
+}
