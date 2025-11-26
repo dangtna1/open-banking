@@ -5,6 +5,7 @@ CREATE TABLE summary_monthly_spend (
     TotalSpend DECIMAL(10,2)
 );
 
+-- Populate Monthly Spend Table
 INSERT INTO summary_monthly_spend
 SELECT 
     DATEFROMPARTS(YEAR(TransactionDate), MONTH(TransactionDate), 1),
