@@ -11,6 +11,10 @@ CREATE TABLE dim_customers (
   RiskSegment NVARCHAR(50)
 );
 
+-- Create foreign key relationship
+ALTER TABLE dim_customers
+ADD CONSTRAINT FK_dim_customers_region FOREIGN KEY (RegionCode) REFERENCES dim_region(RegionCode);
+
 CREATE TABLE dim_accounts (
   AccountID INT PRIMARY KEY,
   CustomerID INT,
@@ -21,6 +25,10 @@ CREATE TABLE dim_accounts (
 );
 ALTER TABLE dim_accounts ALTER COLUMN IsStudent INT;
 ALTER TABLE dim_accounts ALTER COLUMN IsJoint INT;
+
+--- Create foreign key relationship
+ALTER TABLE dim_accounts
+ADD CONSTRAINT FK_dim_accounts_customer FOREIGN KEY (CustomerID) REFERENCES dim_customers(CustomerID);
 
 CREATE TABLE dim_region (
   RegionCode NVARCHAR(10) PRIMARY KEY,
