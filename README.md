@@ -1,22 +1,28 @@
 # UK Open Banking Data Engineering Project (Azure End-to-End)
 
-## 📌 Project Overview
+## Abstract
+Hi, I'm Dang
+An aspiring data engineer who loves fintech.
+This project is a fun yet practical dive into building real-world data pipelines inspired by financial systems. Stay tune with me till the end!!!
 
-This project demonstrates an **end-to-end data engineering pipeline on Azure**, designed to ingest, transform, model, and serve UK Open Banking–style transaction data for downstream analytics and reporting.
+## Project Overview
 
-The focus of this project is **data engineering best practices**, including:
-- cloud-native ingestion
-- lakehouse-style storage
-- transformation logic
-- star-schema modeling
-- automated refresh patterns
-- analytics-ready data serving
+This project demonstrates an **end-to-end data engineering pipeline on Microsoft Azure**, designed to ingest, transform, model, and serve UK Open Banking–style transaction data for downstream analytics and reporting.
 
-A Power BI report is included **only as a downstream consumer** to validate data quality and usability.
+The primary focus of this project is **data engineering best practices**, including:
+
+- Cloud-native data ingestion
+- Lakehouse-style data zoning (Raw → Curated)
+- Deterministic transformation logic
+- Analytics-oriented star schema modelling
+- Type-safe data serving
+- Downstream consumption enablement
+
+A Power BI report is included **only as a downstream consumer** to validate data quality, model usability, and analytical readiness.
 
 ---
 
-## 🏗️ High-Level Architecture
+## High-Level Architecture
 
 **Pipeline flow**
 
@@ -34,149 +40,209 @@ Azure SQL Database (Star Schema)
 Power BI Desktop (Semantic Model & Reporting)
 ```
 
-📌 **Design philosophy**
+**Design philosophy**
+
 - Raw data is immutable
-- Transformations are reproducible
+- Transformations are reproducible and deterministic
+- Business logic is applied upstream
 - SQL layer is analytics-ready
-- BI layer contains no heavy logic
+- BI layer remains lightweight and semantic-only
 
 ---
 
-## 🧱 Data Architecture (Star Schema)
+## Data Architecture (Star Schema)
+
+The data warehouse follows a **classic dimensional (Kimball-style) star schema**, optimised for analytical workloads.
 
 ### Fact Table
-- **fact_transactions**
-  - TransactionID
-  - AccountID
-  - CustomerID
-  - TransactionDate
-  - Amount
-  - BalanceAfter
-  - Category
-  - Channel
-  - IsRecurring
-  - IsSalary
-  - IsRefund
-  - RegionCode
+
+**fact_transactions**  
+Grain: **one row per financial transaction**
+
+- TransactionID
+- AccountID
+- CustomerID
+- TransactionDate
+- Amount
+- BalanceAfter
+- Currency
+- MerchantName
+- MCC
+- City
+- Category
+- Channel
+- IsRecurring
+- IsSalary
+- IsRefund
+- RegionCode
 
 ### Dimension Tables
-- **dim_customers** – demographics, persona, income bands
-- **dim_accounts** – product type, student/joint flags
-- **dim_region** – ONS deprivation index, median income & rent
-- **dim_date** – calendar attributes (derived in Power BI)
 
-📷 **Star Schema Model**
+- **dim_customers**
+  - Customer demographics
+  - Persona classification (student, grad, family, contractor)
+  - Income bands
+- **dim_accounts**
+  - Account type
+  - Student / joint account flags
+- **dim_region**
+  - ONS Deprivation Index
+  - Median income
+  - Median rent
+- **dim_date**
+  - Calendar attributes (derived in Power BI)
+
+**Star Schema Model**
+
 ![Star Schema](docs/images/star_schema.png)
 
 ---
 
-## 🔄 Data Engineering Pipeline
+## Data Engineering Pipeline
 
-### 1️⃣ Data Generation (Synthetic)
-- Python-based generator simulating UK Open Banking patterns
-- Monthly salary cycles
-- Subscription / recurring spend
-- Regional cost-of-living variation
-- Customer personas (student, grad, family, contractor)
+### 1. Synthetic Data Generation
 
-Generated files:
-- customers.csv
-- accounts.csv
-- transactions_YYYYMM.csv
-- ons_region.csv
+- Python-based data generator
+- Simulates UK Open Banking behaviour:
+  - Monthly salary inflows
+  - Subscription-based recurring spend
+  - Regional cost-of-living variation
+  - Realistic transaction frequency distributions
+- Customer personas embedded at source
+
+Generated datasets:
+
+- `customers.csv`
+- `accounts.csv`
+- `transactions_YYYYMM.csv`
+- `region_enrichment.csv`
+
+**Purpose:**
+Provides controlled, repeatable data to validate pipeline logic and modelling decisions.
 
 ---
 
-### 2️⃣ Raw Data Ingestion (ADF)
+### 2. Raw Data Ingestion (Azure Data Factory)
+
 - Azure Data Factory Copy pipelines
 - Parameterised ingestion by month
-- Stored in ADLS Gen2 `/raw/` zone
-- Schema-on-read approach
+- Files landed in ADLS Gen2 `/raw/` zone
+- Schema-on-read ingestion pattern
 
-📌 **Techniques demonstrated**
+**Engineering techniques demonstrated**
+
 - Dataset parameters
 - ForEach loops
 - Dynamic file paths
-- Metadata-driven ingestion
+- Metadata-driven ingestion design
+- No schema enforcement at raw layer
 
 ---
 
-### 3️⃣ Data Transformation (ADF Mapping Data Flows)
+### 3. Data Transformation (ADF Mapping Data Flows)
 
-Transformations include:
-- Type casting (string → numeric / boolean)
-- Business rule derivation:
+Transformations applied in the **curated layer**:
+
+- Explicit type casting (string → INT / DECIMAL / BIT)
+- Boolean standardisation (`true` / `false`)
+- Derived business flags:
   - `IsSalary`
   - `IsRecurring`
-- Standardised category mapping
-- Region code normalization
-- Data quality checks (nulls, invalid values)
+  - `IsRefund`
+- Category standardisation
+- Region code normalisation
+- Basic data quality validation:
+  - Null handling
+  - Invalid value filtering
 
 Curated outputs written to:
+
 - `/curated/customers/`
 - `/curated/accounts/`
 - `/curated/transactions/`
-- `/curated/region/`
+- `/curated/ons/`
 
-📌 **Design choice**
-All business logic lives **before SQL**, keeping the warehouse clean.
+**Design choice**
+
+All transformation and business logic is applied **before the warehouse**, ensuring the SQL layer remains clean, deterministic, and reusable.
 
 ---
 
-### 4️⃣ Data Serving Layer (Azure SQL Database)
+### 4. Data Serving Layer (Azure SQL Database)
 
-- Star schema implemented in Azure SQL
-- Fact & dimension tables pre-created
-- Data loaded via ADF Copy activities
-- Type-safe schema enforcement (INT, DECIMAL, BIT)
+- Azure SQL Database used as the analytical serving layer
+- Star schema implemented with pre-defined tables
+- Data loaded from curated zone via ADF Copy activities
+- Strict schema enforcement using native SQL types
 
-Example engineering considerations:
-- Boolean handling from CSV (`true/false` → BIT)
+**Engineering considerations**
+
+- CSV booleans (`true/false`) converted to `BIT`
+- Numeric precision enforced (`DECIMAL(10,2)`)
 - Referential integrity via surrogate joins
-- Warehouse-ready grain definition
+- Fact grain carefully preserved
+- Warehouse optimised for BI-style queries
 
 ---
 
-### 5️⃣ Analytics Consumption (Power BI Desktop)
+### 5. Analytics Consumption (Power BI Desktop)
 
-Power BI is used to:
-- Validate schema usability
-- Confirm data correctness
-- Demonstrate downstream analytics enablement
+Power BI Desktop is used **only as a consumer** of the engineered data model.
 
-📌 **Important**
-No heavy transformation logic in Power BI.
-All metrics are computed from the engineered model.
+Its purpose is to:
 
-📷 **Executive Overview Example**
+- Validate dimensional design
+- Confirm transformation correctness
+- Demonstrate analytical usability
+
+**Important**
+
+- No heavy transformations in Power BI
+- No data cleansing in the BI layer
+- All metrics calculated from the engineered star schema
+
+**Executive Overview**
+
 ![Executive Overview](docs/images/executive_overview.png)
 
+**Customer Behaviour**
+
+![Customer Behaviour](docs/images/customer_behaviour.png)
+
+**Finacial Risk & Stability**
+
+![Finacial Risk & Stability](docs/images/financial_risk_stability.png)
+
 ---
 
-## 📊 Example Metrics Enabled
+## Example Metrics Enabled
+
+The engineered model supports:
 
 - Monthly Active Customers (MAC)
 - Transactions per Active Customer (TPAC)
 - Savings Rate
 - Recurring Spend Ratio
 - Spend Volatility Index
-- Regional affordability comparison (ONS overlay)
+- Regional affordability analysis (ONS overlay)
 - Customer behavioural segmentation
-
+- Financial risk indicators
+- etc (see the Measures table above)
 ---
 
-## 🔐 Governance & Engineering Best Practices
+## Governance & Engineering Best Practices
 
 - Clear Raw vs Curated zone separation
-- Schema enforcement at SQL layer
-- Reproducible transformations
+- Schema-on-read → schema-on-write progression
+- Deterministic, reproducible transformations
+- Type-safe warehouse layer
 - No hardcoded file paths
 - Analytics-ready star schema
 - BI layer isolated from engineering logic
 
 ---
 
-## 🧰 Tech Stack
+## Tech Stack
 
 - **Azure Data Factory** – orchestration & transformation
 - **Azure Data Lake Storage Gen2** – raw & curated zones
@@ -187,44 +253,21 @@ All metrics are computed from the engineered model.
 
 ---
 
-<!-- ## 📁 Repository Structure
+## Key Takeaway
 
-```
-.
-├── adf/
-|   ├── datasets/
-│   ├── pipelines/
-│   └── dataflows/
-├── sql_scripts/
-│   ├── dim_tables.sql
-│   └── fact_tables.sql
-├── powerbi/
-│   └── OpenBankingInsights.pbix
-├── images/
-│   ├── star_schema.png
-│   └── executive_overview.png
-└── README.md
-```
-
---- -->
-
-## 🎯 Key Takeaway
-
-This project showcases how **raw financial data can be engineered into an analytics-ready warehouse** using Azure-native tools.
+This project demonstrates how **raw financial transaction data can be engineered into an analytics-ready warehouse** using Azure-native services.
 
 The emphasis is on:
-- data pipeline design
-- transformation logic
-- schema modeling
-- downstream usability
 
-Please note: Power BI serves only as proof that the engineered data can support real business analytics.
+- pipeline design
+- transformation logic
+- schema modelling
+- downstream usability
 
 ---
 
-## 📌 Author
+## Author
 
 **Dang Vu**  
 Aspiring Data Engineer / Data Scientist  
 UK-based | Azure | SQL | Data Engineering
-
