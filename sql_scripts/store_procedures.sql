@@ -1,3 +1,17 @@
+-- load fact_transactions from staging table with basic filtering
+CREATE PROCEDURE usp_load_fact_transactions
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    INSERT INTO fact_transactions
+    SELECT *
+    FROM stg_transactions
+    WHERE Amount IS NOT NULL AND TransactionDate IS NOT NULL;
+	-- clean up staging table
+	truncate table stg_transactions
+END;
+
 -- Merchant performance report (month-over-month change) procedure
 CREATE PROCEDURE usp_merchant_mom_change
     @MerchantName NVARCHAR(200)
