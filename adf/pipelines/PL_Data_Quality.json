@@ -1,0 +1,111 @@
+{
+    "name": "PL_Data_Quality",
+    "properties": {
+        "activities": [
+            {
+                "name": "usp_dq_check_nulls",
+                "type": "SqlServerStoredProcedure",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "storedProcedureName": "[dbo].[usp_dq_check_nulls]"
+                },
+                "linkedServiceName": {
+                    "referenceName": "LS_SQL_OpenBanking",
+                    "type": "LinkedServiceReference"
+                }
+            },
+            {
+                "name": "usp_dq_check_duplicates",
+                "type": "SqlServerStoredProcedure",
+                "dependsOn": [
+                    {
+                        "activity": "usp_dq_check_nulls",
+                        "dependencyConditions": [
+                            "Completed"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "storedProcedureName": "[dbo].[usp_dq_check_duplicates]"
+                },
+                "linkedServiceName": {
+                    "referenceName": "LS_SQL_OpenBanking",
+                    "type": "LinkedServiceReference"
+                }
+            },
+            {
+                "name": "usp_dq_check_balance_consistency",
+                "type": "SqlServerStoredProcedure",
+                "dependsOn": [
+                    {
+                        "activity": "usp_dq_check_orphan_keys",
+                        "dependencyConditions": [
+                            "Completed"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "storedProcedureName": "[dbo].[usp_dq_check_balance_consistency]"
+                },
+                "linkedServiceName": {
+                    "referenceName": "LS_SQL_OpenBanking",
+                    "type": "LinkedServiceReference"
+                }
+            },
+            {
+                "name": "usp_dq_check_orphan_keys",
+                "type": "SqlServerStoredProcedure",
+                "dependsOn": [
+                    {
+                        "activity": "usp_dq_check_duplicates",
+                        "dependencyConditions": [
+                            "Completed"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "storedProcedureName": "[dbo].[usp_dq_check_orphan_keys]"
+                },
+                "linkedServiceName": {
+                    "referenceName": "LS_SQL_OpenBanking",
+                    "type": "LinkedServiceReference"
+                }
+            }
+        ],
+        "annotations": [],
+        "lastPublishTime": "2025-12-31T00:10:11Z"
+    },
+    "type": "Microsoft.DataFactory/factories/pipelines"
+}

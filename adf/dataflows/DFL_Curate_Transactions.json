@@ -30,6 +30,9 @@
                 },
                 {
                     "name": "selColumns"
+                },
+                {
+                    "name": "drvIsRefund"
                 }
             ],
             "scriptLines": [
@@ -54,7 +57,7 @@
                 "     ignoreNoFilesFound: false) ~> srcTransactions",
                 "srcTransactions derive(IsSalary = iif((MerchantName == 'Employer Ltd' || toInteger(MCC) == 6011) && toDecimal(Amount) > 0, true(), false())) ~> drvIsSalary",
                 "drvIsSalary derive(IsRecurring = iif(IsSalary == true() || Category == 'Utilities' || Category == 'Subscriptions' || Category == 'Housing', true(), false())) ~> drvIsRecurring",
-                "drvIsRecurring select(mapColumn(",
+                "drvIsRefund select(mapColumn(",
                 "          TransactionID,",
                 "          AccountID,",
                 "          CustomerID,",
@@ -74,6 +77,7 @@
                 "     ),",
                 "     skipDuplicateMapInputs: true,",
                 "     skipDuplicateMapOutputs: true) ~> selColumns",
+                "drvIsRecurring derive(IsRefund = iif(IsRefund == '1', true(), false())) ~> drvIsRefund",
                 "selColumns sink(allowSchemaDrift: true,",
                 "     validateSchema: false,",
                 "     truncate: true,",

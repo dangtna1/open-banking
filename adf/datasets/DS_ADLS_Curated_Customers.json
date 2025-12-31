@@ -10,6 +10,7 @@
         "typeProperties": {
             "location": {
                 "type": "AzureBlobFSLocation",
+                "fileName": "part-00000-7d2369ad-911c-4493-bc6f-59724d65469a-c000.csv",
                 "folderPath": "curated/customers",
                 "fileSystem": "datalake"
             },

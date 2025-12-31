@@ -29,7 +29,8 @@
                     "sink": {
                         "type": "AzureSqlSink",
                         "writeBehavior": "insert",
-                        "sqlWriterUseTableLock": false
+                        "sqlWriterUseTableLock": false,
+                        "disableMetricsCollection": false
                     },
                     "enableStaging": false,
                     "translator": {
@@ -130,7 +131,7 @@
             }
         ],
         "annotations": [],
-        "lastPublishTime": "2025-11-07T13:45:04Z"
+        "lastPublishTime": "2025-12-29T22:22:35Z"
     },
     "type": "Microsoft.DataFactory/factories/pipelines"
 }

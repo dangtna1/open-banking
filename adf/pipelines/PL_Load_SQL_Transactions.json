@@ -33,7 +33,13 @@
                     },
                     "sink": {
                         "type": "AzureSqlSink",
-                        "writeBehavior": "insert",
+                        "writeBehavior": "upsert",
+                        "upsertSettings": {
+                            "useTempDB": true,
+                            "keys": [
+                                "TransactionID"
+                            ]
+                        },
                         "sqlWriterUseTableLock": false,
                         "disableMetricsCollection": false
                     },
@@ -195,8 +201,8 @@
                                 },
                                 "sink": {
                                     "name": "IsRefund",
-                                    "type": "Int32",
-                                    "physicalType": "int"
+                                    "type": "Boolean",
+                                    "physicalType": "bit"
                                 }
                             },
                             {
@@ -256,20 +262,70 @@
                 ],
                 "outputs": [
                     {
-                        "referenceName": "DS_SQL_fact_transaction",
+                        "referenceName": "DS_SQL_staging_transaction",
                         "type": "DatasetReference"
                     }
                 ]
+            },
+            {
+                "name": "load_fact_transactions",
+                "type": "SqlServerStoredProcedure",
+                "dependsOn": [
+                    {
+                        "activity": "Transactions_CuratedToSQL",
+                        "dependencyConditions": [
+                            "Completed"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "storedProcedureName": "[dbo].[usp_load_fact_transactions]"
+                },
+                "linkedServiceName": {
+                    "referenceName": "LS_SQL_OpenBanking",
+                    "type": "LinkedServiceReference"
+                }
+            },
+            {
+                "name": "Trigger_Data_Quality_Pipeline",
+                "type": "ExecutePipeline",
+                "dependsOn": [
+                    {
+                        "activity": "load_fact_transactions",
+                        "dependencyConditions": [
+                            "Completed"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "pipeline": {
+                        "referenceName": "PL_Data_Quality",
+                        "type": "PipelineReference"
+                    },
+                    "waitOnCompletion": true
+                }
             }
         ],
         "parameters": {
             "MonthCode": {
                 "type": "string",
-                "defaultValue": "202504"
+                "defaultValue": "202501"
             }
         },
         "annotations": [],
-        "lastPublishTime": "2025-11-14T02:54:49Z"
+        "lastPublishTime": "2025-12-31T00:10:12Z"
     },
     "type": "Microsoft.DataFactory/factories/pipelines"
 }

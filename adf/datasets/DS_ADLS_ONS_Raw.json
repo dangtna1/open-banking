@@ -11,7 +11,7 @@
             "location": {
                 "type": "AzureBlobFSLocation",
                 "fileName": "region_enrichment.csv",
-                "folderPath": "raw/ONS",
+                "folderPath": "raw/ons",
                 "fileSystem": "datalake"
             },
             "columnDelimiter": ",",
