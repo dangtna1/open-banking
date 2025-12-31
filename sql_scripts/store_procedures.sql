@@ -61,15 +61,24 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    SELECT 'CustomerID' AS ColumnName, COUNT(*) AS NullCount 
-    FROM fact_transactions WHERE CustomerID IS NULL;
+    DECLARE @IssueCount INT;
 
-    SELECT 'AccountID' AS ColumnName, COUNT(*) AS NullCount 
-    FROM fact_transactions WHERE AccountID IS NULL;
+    SELECT @IssueCount = COUNT(*)
+    FROM fact_transactions
+    WHERE
+        TransactionID IS NULL
+        OR AccountID IS NULL
+        OR CustomerID IS NULL
+        OR TransactionDate IS NULL
+        OR Amount IS NULL;
 
-    SELECT 'TransactionDate' AS ColumnName, COUNT(*) AS NullCount 
-    FROM fact_transactions WHERE TransactionDate IS NULL;
+    INSERT INTO dq_results (CheckName, IssueCount)
+    VALUES ('Null values in critical columns', @IssueCount);
+
+    IF @IssueCount > 0
+        THROW 50002, 'Null values detected in fact_transactions', 1;
 END;
+
 
 -- Check for invalid amounts
 CREATE PROCEDURE usp_dq_check_amounts
@@ -90,13 +99,23 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    SELECT 
-        TransactionID,
-        COUNT(*) AS Occurrences
-    FROM fact_transactions
-    GROUP BY TransactionID
-    HAVING COUNT(*) > 1;
+    DECLARE @IssueCount INT;
+
+    SELECT @IssueCount = COUNT(*)
+    FROM (
+        SELECT TransactionID
+        FROM fact_transactions
+        GROUP BY TransactionID
+        HAVING COUNT(*) > 1
+    ) d;
+
+    INSERT INTO dq_results (CheckName, IssueCount)
+    VALUES ('Duplicate TransactionID', @IssueCount);
+
+    IF @IssueCount > 0
+        THROW 50001, 'Duplicate transactions detected', 1;
 END;
+
 
 -- Find transactions that reference non-existent dimension rows
 CREATE PROCEDURE usp_dq_check_orphan_keys
@@ -104,36 +123,25 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    -- Orphan Customers
-    SELECT 
-        'Customer' AS OrphanType,
-        f.CustomerID,
-        COUNT(*) AS TransactionCount
-    FROM fact_transactions f
-    LEFT JOIN dim_customers c ON f.CustomerID = c.CustomerID
-    WHERE c.CustomerID IS NULL
-    GROUP BY f.CustomerID;
+    DECLARE @IssueCount INT;
 
-    -- Orphan Accounts
-    SELECT 
-        'Account' AS OrphanType,
-        f.AccountID,
-        COUNT(*) AS TransactionCount
+    SELECT @IssueCount = COUNT(*)
     FROM fact_transactions f
-    LEFT JOIN dim_accounts a ON f.AccountID = a.AccountID
-    WHERE a.AccountID IS NULL
-    GROUP BY f.AccountID;
+    LEFT JOIN dim_customers c
+        ON f.CustomerID = c.CustomerID
+    LEFT JOIN dim_accounts a
+        ON f.AccountID = a.AccountID
+    WHERE
+        c.CustomerID IS NULL
+        OR a.AccountID IS NULL;
 
-    -- Orphan Regions
-    SELECT 
-        'Region' AS OrphanType,
-        f.RegionCode,
-        COUNT(*) AS TransactionCount
-    FROM fact_transactions f
-    LEFT JOIN dim_region r ON f.RegionCode = r.RegionCode
-    WHERE r.RegionCode IS NULL
-    GROUP BY f.RegionCode;
+    INSERT INTO dq_results (CheckName, IssueCount)
+    VALUES ('Orphan foreign keys', @IssueCount);
+
+    IF @IssueCount > 0
+        THROW 50003, 'Orphan keys detected in fact_transactions', 1;
 END;
+
 
 -- Detect future dates, extremely old dates, and missing dates
 CREATE PROCEDURE usp_dq_check_date_anomalies
@@ -168,42 +176,37 @@ END;
 
 -- Checks if BalanceAfter matches previous balance + amount (by Account)
 CREATE PROCEDURE usp_dq_check_balance_consistency
-    @Tolerance DECIMAL(12,2) = 0.01   -- allow small rounding diffs
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    WITH Ordered AS (
+    DECLARE @IssueCount INT;
+
+    WITH BalanceCalc AS (
         SELECT
             TransactionID,
             AccountID,
-            TransactionDate,
             Amount,
             BalanceAfter,
             LAG(BalanceAfter) OVER (
                 PARTITION BY AccountID
-                ORDER BY TransactionDate, TransactionID
+                ORDER BY TransactionDate
             ) AS PrevBalance
         FROM fact_transactions
-    ),
-    CheckBalance AS (
-        SELECT
-            TransactionID,
-            AccountID,
-            TransactionDate,
-            Amount,
-            PrevBalance,
-            BalanceAfter,
-            (PrevBalance + Amount) AS ExpectedBalance,
-            ABS((PrevBalance + Amount) - BalanceAfter) AS Diff
-        FROM Ordered
-        WHERE PrevBalance IS NOT NULL
     )
-    SELECT *
-    FROM CheckBalance
-    WHERE Diff > @Tolerance
-    ORDER BY Diff DESC;
+    SELECT @IssueCount = COUNT(*)
+    FROM BalanceCalc
+    WHERE
+        PrevBalance IS NOT NULL
+        AND BalanceAfter <> PrevBalance + Amount;
+
+    INSERT INTO dq_results (CheckName, IssueCount)
+    VALUES ('Balance inconsistency', @IssueCount);
+
+    IF @IssueCount > 0
+        THROW 50004, 'Balance consistency check failed', 1;
 END;
+
 
 -- Check weird salary transactions (negative, too frequent, zero, etc.)
 CREATE PROCEDURE usp_dq_check_salary_logic
