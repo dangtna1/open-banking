@@ -1,60 +1,69 @@
 # UK Open Banking Data Engineering Project (Azure End-to-End)
 
 ## Abstract
-Hi, I'm Dang
-An aspiring data engineer who loves fintech.
-This project is a fun yet practical dive into building real-world data pipelines inspired by financial systems. Stay tune with me till the end!!!
+Hi, I'm Dang — an aspiring Data Engineer with a strong interest in fintech and analytics platforms.
+
+This project is a practical, end-to-end implementation of a **production-minded data engineering pipeline** inspired by UK Open Banking systems. It focuses on **data ingestion, transformation, validation, modelling, orchestration, and analytics enablement** using Azure-native services.
+
+While a Power BI report is included, it is treated strictly as a **downstream consumer**, not the core of the project.
+
+---
 
 ## Project Overview
 
-This project demonstrates an **end-to-end data engineering pipeline on Microsoft Azure**, designed to ingest, transform, model, and serve UK Open Banking–style transaction data for downstream analytics and reporting.
+This project demonstrates an **end-to-end data engineering workflow on Microsoft Azure**, designed to ingest, validate, transform, model, and serve financial transaction data at scale.
 
-The primary focus of this project is **data engineering best practices**, including:
+Primary engineering goals:
 
-- Cloud-native data ingestion
-- Lakehouse-style data zoning (Raw → Curated)
+- Cloud-native ingestion and orchestration
+- Lakehouse-style zoning (Raw → Curated)
 - Deterministic transformation logic
-- Analytics-oriented star schema modelling
-- Type-safe data serving
-- Downstream consumption enablement
-
-A Power BI report is included **only as a downstream consumer** to validate data quality, model usability, and analytical readiness.
+- Staging-based data quality enforcement
+- Analytics-ready dimensional modelling
+- Automated, scheduled pipelines
+- Downstream semantic consumption
 
 ---
 
 ## High-Level Architecture
 
-**Pipeline flow**
-
 ```
+
 Synthetic Open Banking Data (CSV)
-        ↓
+↓
 Azure Data Lake Storage Gen2 (Raw Zone)
-        ↓
+↓
 Azure Data Factory (Mapping Data Flows)
-        ↓
+↓
 Azure Data Lake Storage Gen2 (Curated Zone)
-        ↓
+↓
+Azure Data Factory (Upsert → Staging Tables)
+↓
+Azure SQL Stored Procedures (Validation + Merge)
+↓
 Azure SQL Database (Star Schema)
-        ↓
+↓
 Power BI Desktop (Semantic Model & Reporting)
+
 ```
 
-**Design philosophy**
+### Design Philosophy
 
 - Raw data is immutable
-- Transformations are reproducible and deterministic
-- Business logic is applied upstream
-- SQL layer is analytics-ready
+- Transformations are reproducible
+- Business rules are enforced upstream
+- SQL layer is analytics-safe
 - BI layer remains lightweight and semantic-only
 
 ---
 
-## Data Architecture (Star Schema)
+## Data Architecture
 
-The data warehouse follows a **classic dimensional (Kimball-style) star schema**, optimised for analytical workloads.
+### Star Schema (Analytics Layer)
 
-### Fact Table
+The warehouse follows a **Kimball-style dimensional model**, optimised for BI and analytical workloads.
+
+#### Fact Table
 
 **fact_transactions**  
 Grain: **one row per financial transaction**
@@ -76,15 +85,15 @@ Grain: **one row per financial transaction**
 - IsRefund
 - RegionCode
 
-### Dimension Tables
+#### Dimension Tables
 
 - **dim_customers**
   - Customer demographics
-  - Persona classification (student, grad, family, contractor)
+  - Persona classification
   - Income bands
 - **dim_accounts**
-  - Account type
-  - Student / joint account flags
+  - Account types
+  - Student / joint flags
 - **dim_region**
   - ONS Deprivation Index
   - Median income
@@ -92,9 +101,28 @@ Grain: **one row per financial transaction**
 - **dim_date**
   - Calendar attributes (derived in Power BI)
 
-**Star Schema Model**
+**Star Schema Diagram**
 
 ![Star Schema](docs/images/star_schema.png)
+
+---
+
+## Staging Layer (Data Quality Control)
+
+A **staging table** is introduced to enforce quality gates before data reaches the fact table.
+
+### stg_transactions
+
+Purpose:
+- Temporary landing table for curated data
+- Acts as a quality buffer
+- Enables validation and controlled merges
+
+Key characteristics:
+- Matches curated schema
+- Not used by analytics
+- Supports idempotent upserts
+- Prevents invalid records from polluting fact tables
 
 ---
 
@@ -103,166 +131,203 @@ Grain: **one row per financial transaction**
 ### 1. Synthetic Data Generation
 
 - Python-based data generator
-- Simulates UK Open Banking behaviour:
+- Simulates realistic UK Open Banking behaviour:
   - Monthly salary inflows
-  - Subscription-based recurring spend
-  - Regional cost-of-living variation
-  - Realistic transaction frequency distributions
-- Customer personas embedded at source
+  - Recurring subscriptions
+  - Regional cost-of-living differences
+  - Customer personas
+- Ensures controlled, repeatable datasets
 
-Generated datasets:
-
-- `customers.csv`
-- `accounts.csv`
-- `transactions_YYYYMM.csv`
-- `region_enrichment.csv`
-
-**Purpose:**
-Provides controlled, repeatable data to validate pipeline logic and modelling decisions.
+Generated files:
+- customers.csv
+- accounts.csv
+- transactions_YYYYMM.csv
+- region_enrichment.csv
 
 ---
 
-### 2. Raw Data Ingestion (Azure Data Factory)
+### 2. Raw Ingestion (Azure Data Factory)
 
-- Azure Data Factory Copy pipelines
-- Parameterised ingestion by month
-- Files landed in ADLS Gen2 `/raw/` zone
-- Schema-on-read ingestion pattern
+- Parameterised Copy pipelines
+- Monthly ingestion pattern
+- Files landed into ADLS Gen2 `/raw/` zone
+- Schema-on-read approach
 
-**Engineering techniques demonstrated**
-
+Techniques used:
 - Dataset parameters
-- ForEach loops
 - Dynamic file paths
-- Metadata-driven ingestion design
-- No schema enforcement at raw layer
+- ForEach loops
+- Metadata-driven ingestion
 
 ---
 
-### 3. Data Transformation (ADF Mapping Data Flows)
+### 3. Transformation (Curated Zone)
+![Curating Transactions Dataflow](docs/images/DFL_Curate_Transactions.png)
 
-Transformations applied in the **curated layer**:
+Transformations applied using **ADF Mapping Data Flows**:
 
-- Explicit type casting (string → INT / DECIMAL / BIT)
-- Boolean standardisation (`true` / `false`)
-- Derived business flags:
-  - `IsSalary`
-  - `IsRecurring`
-  - `IsRefund`
+- Explicit type casting
+- Boolean normalisation
+- Derived flags:
+  - IsSalary
+  - IsRecurring
+  - IsRefund
 - Category standardisation
-- Region code normalisation
-- Basic data quality validation:
-  - Null handling
-  - Invalid value filtering
+- Region code enrichment
+- Basic data validation
 
-Curated outputs written to:
-
+Outputs written to:
 - `/curated/customers/`
 - `/curated/accounts/`
 - `/curated/transactions/`
 - `/curated/ons/`
 
-**Design choice**
-
-All transformation and business logic is applied **before the warehouse**, ensuring the SQL layer remains clean, deterministic, and reusable.
+All business logic is applied **before the warehouse**.
 
 ---
 
-### 4. Data Serving Layer (Azure SQL Database)
+### 4. Curated → Staging Load (Upsert Pattern)
 
-- Azure SQL Database used as the analytical serving layer
-- Star schema implemented with pre-defined tables
-- Data loaded from curated zone via ADF Copy activities
-- Strict schema enforcement using native SQL types
+- Curated transaction data is **upserted** into `stg_transactions`
+- Ensures:
+  - Safe reprocessing
+  - Late-arriving data handling
+  - Idempotent pipeline runs
 
-**Engineering considerations**
-
-- CSV booleans (`true/false`) converted to `BIT`
-- Numeric precision enforced (`DECIMAL(10,2)`)
-- Referential integrity via surrogate joins
-- Fact grain carefully preserved
-- Warehouse optimised for BI-style queries
+ADF techniques:
+- Copy Activity
+- SQL-based upsert logic
+- No direct writes to fact tables
 
 ---
 
-### 5. Analytics Consumption (Power BI Desktop)
+### 5. Stored Procedure–Driven Fact Load
 
-Power BI Desktop is used **only as a consumer** of the engineered data model.
+ADF triggers a SQL stored procedure to move data from staging into the fact table.
 
-Its purpose is to:
+Responsibilities:
+- Enforce critical constraints:
+  - Amount IS NOT NULL
+  - TransactionDate IS NOT NULL
+- Apply business validation rules
+- Merge valid records into `fact_transactions`
+- Reject invalid data deterministically
 
-- Validate dimensional design
-- Confirm transformation correctness
-- Demonstrate analytical usability
+All enforcement is handled **inside SQL**, not ADF.
 
-**Important**
+---
 
-- No heavy transformations in Power BI
-- No data cleansing in the BI layer
-- All metrics calculated from the engineered star schema
+### 6. Data Quality Pipeline
 
-**Executive Overview**
+A dedicated **Data Quality pipeline** runs after the fact load.
+
+Implemented checks:
+- Null checks on key fields
+- Duplicate detection
+- Orphan key detection
+- Balance consistency validation
+- Salary logic validation
+
+Each check:
+- Logs results to `dq_results`
+- Throws an error if violations exist
+- Fails the pipeline immediately
+
+Pipeline structure:
+
+```
+
+Pipeline_Load_Transactions
+├── Copy → Staging (Upsert)
+├── Stored Procedure → Load Fact
+└── Trigger → Pipeline_Data_Quality
+
+Pipeline_Data_Quality
+├── usp_dq_check_nulls
+├── usp_dq_check_duplicates
+├── usp_dq_check_orphan_keys
+└── usp_dq_check_balance_consistency
+
+```
+
+---
+
+### 7. Scheduling & Automation
+
+- Pipelines scheduled via Azure Data Factory triggers
+- Daily execution at **23:59**
+- Ensures predictable batch processing and data freshness
+
+---
+
+## Analytics Consumption (Power BI)
+
+Power BI is used strictly as a **consumer** of the engineered model.
+
+Principles:
+- No heavy transformations
+- No data cleansing
+- Semantic-only calculations
+
+Report pages:
+- Executive Overview
+- Customer Behaviour
+- Financial Risk & Stability
 
 ![Executive Overview](docs/images/executive_overview.png)
-
-**Customer Behaviour**
-
 ![Customer Behaviour](docs/images/customer_behaviour.png)
-
-**Finacial Risk & Stability**
-
-![Finacial Risk & Stability](docs/images/financial_risk_stability.png)
+![Financial Risk & Stability](docs/images/financial_risk_stability.png)
 
 ---
 
-## Example Metrics Enabled
+## Metrics Enabled
 
-The engineered model supports:
-
-- Monthly Active Customers (MAC)
+- Monthly Active Customers
 - Transactions per Active Customer (TPAC)
 - Savings Rate
 - Recurring Spend Ratio
 - Spend Volatility Index
-- Regional affordability analysis (ONS overlay)
-- Customer behavioural segmentation
+- Regional affordability metrics
+- Behavioural segmentation
 - Financial risk indicators
-- etc (see the Measures table above)
+
 ---
 
 ## Governance & Engineering Best Practices
 
-- Clear Raw vs Curated zone separation
-- Schema-on-read → schema-on-write progression
-- Deterministic, reproducible transformations
-- Type-safe warehouse layer
-- No hardcoded file paths
-- Analytics-ready star schema
-- BI layer isolated from engineering logic
+- Raw vs Curated zone separation
+- Staging-based validation
+- Schema-on-read → schema-on-write
+- Deterministic transformations
+- Type-safe SQL warehouse
+- Fail-fast pipelines
+- BI isolated from engineering logic
 
 ---
 
 ## Tech Stack
 
-- **Azure Data Factory** – orchestration & transformation
-- **Azure Data Lake Storage Gen2** – raw & curated zones
-- **Azure SQL Database** – dimensional warehouse
-- **Power BI Desktop** – semantic model & reporting
-- **Python** – synthetic data generation
-- **SQL** – schema design & data serving
+- Azure Data Factory
+- Azure Data Lake Storage Gen2
+- Azure SQL Database
+- Power BI Desktop
+- Python
+- SQL
 
 ---
 
 ## Key Takeaway
 
-This project demonstrates how **raw financial transaction data can be engineered into an analytics-ready warehouse** using Azure-native services.
+This project demonstrates how raw financial transaction data can be engineered into a **trustworthy, analytics-ready platform** using Azure-native services.
 
-The emphasis is on:
+The focus is on:
+- ingestion design
+- validation strategy
+- data quality enforcement
+- dimensional modelling
+- automated orchestration
 
-- pipeline design
-- transformation logic
-- schema modelling
-- downstream usability
+Power BI validates the outcome — it does not define the pipeline.
 
 ---
 
