@@ -3,8 +3,408 @@
     "properties": {
         "activities": [
             {
-                "name": "Transactions_CuratedToSQL",
-                "type": "Copy",
+                "name": "Get Transaction Metadata",
+                "type": "GetMetadata",
+                "dependsOn": [
+                    {
+                        "activity": "Lookup_Watermark",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "dataset": {
+                        "referenceName": "DS_ALDS_Transactions",
+                        "type": "DatasetReference"
+                    },
+                    "fieldList": [
+                        "childItems"
+                    ],
+                    "storeSettings": {
+                        "type": "AzureBlobFSReadSettings",
+                        "recursive": true,
+                        "enablePartitionDiscovery": false
+                    },
+                    "formatSettings": {
+                        "type": "DelimitedTextReadSettings"
+                    }
+                }
+            },
+            {
+                "name": "Transaction_Curated_To_Staging",
+                "type": "ForEach",
+                "dependsOn": [
+                    {
+                        "activity": "Get Transaction Metadata",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "userProperties": [],
+                "typeProperties": {
+                    "items": {
+                        "value": "@activity('Get Transaction Metadata').output.childItems",
+                        "type": "Expression"
+                    },
+                    "isSequential": false,
+                    "activities": [
+                        {
+                            "name": "If_TransactionDate_Greater_Watermark",
+                            "type": "IfCondition",
+                            "dependsOn": [],
+                            "userProperties": [],
+                            "typeProperties": {
+                                "expression": {
+                                    "value": "@greaterOrEquals(\n    formatDateTime(\n        concat(\n            substring(item().name, 0, 4), '-',\n            substring(item().name, 4, 2), '-01'\n        ),\n        'yyyy-MM-dd'\n    ), \n    formatDateTime(\n        activity('Lookup_Watermark').output.firstRow.LastProcessedDate,\n        'yyyy-MM-dd'\n    )\n)",
+                                    "type": "Expression"
+                                },
+                                "ifTrueActivities": [
+                                    {
+                                        "name": "Transactions_CuratedToSQL",
+                                        "type": "Copy",
+                                        "dependsOn": [],
+                                        "policy": {
+                                            "timeout": "0.12:00:00",
+                                            "retry": 0,
+                                            "retryIntervalInSeconds": 30,
+                                            "secureOutput": false,
+                                            "secureInput": false
+                                        },
+                                        "userProperties": [],
+                                        "typeProperties": {
+                                            "source": {
+                                                "type": "DelimitedTextSource",
+                                                "storeSettings": {
+                                                    "type": "AzureBlobFSReadSettings",
+                                                    "recursive": true,
+                                                    "wildcardFolderPath": {
+                                                        "value": "curated/transactions/@{item().name}",
+                                                        "type": "Expression"
+                                                    },
+                                                    "wildcardFileName": "*",
+                                                    "enablePartitionDiscovery": false
+                                                },
+                                                "formatSettings": {
+                                                    "type": "DelimitedTextReadSettings"
+                                                }
+                                            },
+                                            "sink": {
+                                                "type": "AzureSqlSink",
+                                                "writeBehavior": "upsert",
+                                                "upsertSettings": {
+                                                    "useTempDB": true,
+                                                    "keys": [
+                                                        "TransactionID"
+                                                    ]
+                                                },
+                                                "sqlWriterUseTableLock": false,
+                                                "disableMetricsCollection": false
+                                            },
+                                            "enableStaging": false,
+                                            "translator": {
+                                                "type": "TabularTranslator",
+                                                "mappings": [
+                                                    {
+                                                        "source": {
+                                                            "name": "TransactionID",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "TransactionID",
+                                                            "type": "Int64",
+                                                            "physicalType": "bigint"
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "AccountID",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "AccountID",
+                                                            "type": "Int32",
+                                                            "physicalType": "int"
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "CustomerID",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "CustomerID",
+                                                            "type": "Int32",
+                                                            "physicalType": "int"
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "Amount",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "Amount",
+                                                            "type": "Decimal",
+                                                            "physicalType": "decimal",
+                                                            "scale": 2,
+                                                            "precision": 12
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "Currency",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "Currency",
+                                                            "type": "String",
+                                                            "physicalType": "nvarchar"
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "MerchantName",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "MerchantName",
+                                                            "type": "String",
+                                                            "physicalType": "nvarchar"
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "MCC",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "MCC",
+                                                            "type": "Int32",
+                                                            "physicalType": "int"
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "Category",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "Category",
+                                                            "type": "String",
+                                                            "physicalType": "nvarchar"
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "Channel",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "Channel",
+                                                            "type": "String",
+                                                            "physicalType": "nvarchar"
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "City",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "City",
+                                                            "type": "String",
+                                                            "physicalType": "nvarchar"
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "RegionCode",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "RegionCode",
+                                                            "type": "String",
+                                                            "physicalType": "nvarchar"
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "IsRecurring",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "IsRecurring",
+                                                            "type": "Boolean",
+                                                            "physicalType": "bit"
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "IsRefund",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "IsRefund",
+                                                            "type": "Boolean",
+                                                            "physicalType": "bit"
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "IsSalary",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "IsSalary",
+                                                            "type": "Boolean",
+                                                            "physicalType": "bit"
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "BalanceAfter",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "BalanceAfter",
+                                                            "type": "Decimal",
+                                                            "physicalType": "decimal",
+                                                            "scale": 2,
+                                                            "precision": 12
+                                                        }
+                                                    },
+                                                    {
+                                                        "source": {
+                                                            "name": "TransactionDate",
+                                                            "type": "String",
+                                                            "physicalType": "String"
+                                                        },
+                                                        "sink": {
+                                                            "name": "TransactionDate",
+                                                            "type": "DateTime",
+                                                            "physicalType": "datetime"
+                                                        }
+                                                    }
+                                                ],
+                                                "typeConversion": true,
+                                                "typeConversionSettings": {
+                                                    "allowDataTruncation": true,
+                                                    "treatBooleanAsNumber": false
+                                                }
+                                            }
+                                        },
+                                        "inputs": [
+                                            {
+                                                "referenceName": "DS_ADLS_Curated_Transactions",
+                                                "type": "DatasetReference",
+                                                "parameters": {
+                                                    "MonthCode": {
+                                                        "value": "@item().name",
+                                                        "type": "Expression"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "outputs": [
+                                            {
+                                                "referenceName": "DS_SQL_staging_transaction",
+                                                "type": "DatasetReference"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "name": "load_fact_transactions",
+                                        "type": "SqlServerStoredProcedure",
+                                        "dependsOn": [
+                                            {
+                                                "activity": "Transactions_CuratedToSQL",
+                                                "dependencyConditions": [
+                                                    "Succeeded"
+                                                ]
+                                            }
+                                        ],
+                                        "policy": {
+                                            "timeout": "0.12:00:00",
+                                            "retry": 0,
+                                            "retryIntervalInSeconds": 30,
+                                            "secureOutput": false,
+                                            "secureInput": false
+                                        },
+                                        "userProperties": [],
+                                        "typeProperties": {
+                                            "storedProcedureName": "[dbo].[usp_load_fact_transactions]",
+                                            "storedProcedureParameters": {
+                                                "MaxLoadedDate": {
+                                                    "value": {
+                                                        "value": "@activity('Lookup_Watermark').output.firstRow.LastProcessedDate",
+                                                        "type": "Expression"
+                                                    },
+                                                    "type": "DateTime"
+                                                }
+                                            }
+                                        },
+                                        "linkedServiceName": {
+                                            "referenceName": "LS_SQL_OpenBanking",
+                                            "type": "LinkedServiceReference"
+                                        }
+                                    },
+                                    {
+                                        "name": "Trigger_Data_Quality_Pipeline",
+                                        "type": "ExecutePipeline",
+                                        "dependsOn": [
+                                            {
+                                                "activity": "load_fact_transactions",
+                                                "dependencyConditions": [
+                                                    "Succeeded"
+                                                ]
+                                            }
+                                        ],
+                                        "policy": {
+                                            "secureInput": false
+                                        },
+                                        "userProperties": [],
+                                        "typeProperties": {
+                                            "pipeline": {
+                                                "referenceName": "PL_Data_Quality",
+                                                "type": "PipelineReference"
+                                            },
+                                            "waitOnCompletion": true
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "name": "Lookup_Watermark",
+                "type": "Lookup",
                 "dependsOn": [],
                 "policy": {
                     "timeout": "0.12:00:00",
@@ -16,265 +416,26 @@
                 "userProperties": [],
                 "typeProperties": {
                     "source": {
-                        "type": "DelimitedTextSource",
-                        "storeSettings": {
-                            "type": "AzureBlobFSReadSettings",
-                            "recursive": true,
-                            "wildcardFolderPath": {
-                                "value": "curated/transactions/@{pipeline().parameters.MonthCode}",
-                                "type": "Expression"
-                            },
-                            "wildcardFileName": "*",
-                            "enablePartitionDiscovery": false
-                        },
-                        "formatSettings": {
-                            "type": "DelimitedTextReadSettings"
-                        }
+                        "type": "AzureSqlSource",
+                        "sqlReaderQuery": "SELECT LastProcessedDate\nFROM etl_watermark\nWHERE PipelineName = 'Pipeline_Load_Transaction';",
+                        "queryTimeout": "02:00:00",
+                        "partitionOption": "None"
                     },
-                    "sink": {
-                        "type": "AzureSqlSink",
-                        "writeBehavior": "upsert",
-                        "upsertSettings": {
-                            "useTempDB": true,
-                            "keys": [
-                                "TransactionID"
-                            ]
-                        },
-                        "sqlWriterUseTableLock": false,
-                        "disableMetricsCollection": false
-                    },
-                    "enableStaging": false,
-                    "translator": {
-                        "type": "TabularTranslator",
-                        "mappings": [
-                            {
-                                "source": {
-                                    "name": "TransactionID",
-                                    "type": "String",
-                                    "physicalType": "String"
-                                },
-                                "sink": {
-                                    "name": "TransactionID",
-                                    "type": "Int64",
-                                    "physicalType": "bigint"
-                                }
-                            },
-                            {
-                                "source": {
-                                    "name": "AccountID",
-                                    "type": "String",
-                                    "physicalType": "String"
-                                },
-                                "sink": {
-                                    "name": "AccountID",
-                                    "type": "Int32",
-                                    "physicalType": "int"
-                                }
-                            },
-                            {
-                                "source": {
-                                    "name": "CustomerID",
-                                    "type": "String",
-                                    "physicalType": "String"
-                                },
-                                "sink": {
-                                    "name": "CustomerID",
-                                    "type": "Int32",
-                                    "physicalType": "int"
-                                }
-                            },
-                            {
-                                "source": {
-                                    "name": "Amount",
-                                    "type": "String",
-                                    "physicalType": "String"
-                                },
-                                "sink": {
-                                    "name": "Amount",
-                                    "type": "Decimal",
-                                    "physicalType": "decimal",
-                                    "scale": 2,
-                                    "precision": 12
-                                }
-                            },
-                            {
-                                "source": {
-                                    "name": "Currency",
-                                    "type": "String",
-                                    "physicalType": "String"
-                                },
-                                "sink": {
-                                    "name": "Currency",
-                                    "type": "String",
-                                    "physicalType": "nvarchar"
-                                }
-                            },
-                            {
-                                "source": {
-                                    "name": "MerchantName",
-                                    "type": "String",
-                                    "physicalType": "String"
-                                },
-                                "sink": {
-                                    "name": "MerchantName",
-                                    "type": "String",
-                                    "physicalType": "nvarchar"
-                                }
-                            },
-                            {
-                                "source": {
-                                    "name": "MCC",
-                                    "type": "String",
-                                    "physicalType": "String"
-                                },
-                                "sink": {
-                                    "name": "MCC",
-                                    "type": "Int32",
-                                    "physicalType": "int"
-                                }
-                            },
-                            {
-                                "source": {
-                                    "name": "Category",
-                                    "type": "String",
-                                    "physicalType": "String"
-                                },
-                                "sink": {
-                                    "name": "Category",
-                                    "type": "String",
-                                    "physicalType": "nvarchar"
-                                }
-                            },
-                            {
-                                "source": {
-                                    "name": "Channel",
-                                    "type": "String",
-                                    "physicalType": "String"
-                                },
-                                "sink": {
-                                    "name": "Channel",
-                                    "type": "String",
-                                    "physicalType": "nvarchar"
-                                }
-                            },
-                            {
-                                "source": {
-                                    "name": "City",
-                                    "type": "String",
-                                    "physicalType": "String"
-                                },
-                                "sink": {
-                                    "name": "City",
-                                    "type": "String",
-                                    "physicalType": "nvarchar"
-                                }
-                            },
-                            {
-                                "source": {
-                                    "name": "RegionCode",
-                                    "type": "String",
-                                    "physicalType": "String"
-                                },
-                                "sink": {
-                                    "name": "RegionCode",
-                                    "type": "String",
-                                    "physicalType": "nvarchar"
-                                }
-                            },
-                            {
-                                "source": {
-                                    "name": "IsRecurring",
-                                    "type": "String",
-                                    "physicalType": "String"
-                                },
-                                "sink": {
-                                    "name": "IsRecurring",
-                                    "type": "Boolean",
-                                    "physicalType": "bit"
-                                }
-                            },
-                            {
-                                "source": {
-                                    "name": "IsRefund",
-                                    "type": "String",
-                                    "physicalType": "String"
-                                },
-                                "sink": {
-                                    "name": "IsRefund",
-                                    "type": "Boolean",
-                                    "physicalType": "bit"
-                                }
-                            },
-                            {
-                                "source": {
-                                    "name": "IsSalary",
-                                    "type": "String",
-                                    "physicalType": "String"
-                                },
-                                "sink": {
-                                    "name": "IsSalary",
-                                    "type": "Boolean",
-                                    "physicalType": "bit"
-                                }
-                            },
-                            {
-                                "source": {
-                                    "name": "BalanceAfter",
-                                    "type": "String",
-                                    "physicalType": "String"
-                                },
-                                "sink": {
-                                    "name": "BalanceAfter",
-                                    "type": "Decimal",
-                                    "physicalType": "decimal",
-                                    "scale": 2,
-                                    "precision": 12
-                                }
-                            },
-                            {
-                                "source": {
-                                    "name": "TransactionDate",
-                                    "type": "String",
-                                    "physicalType": "String"
-                                },
-                                "sink": {
-                                    "name": "TransactionDate",
-                                    "type": "DateTime",
-                                    "physicalType": "datetime"
-                                }
-                            }
-                        ],
-                        "typeConversion": true,
-                        "typeConversionSettings": {
-                            "allowDataTruncation": true,
-                            "treatBooleanAsNumber": false
-                        }
-                    }
-                },
-                "inputs": [
-                    {
-                        "referenceName": "DS_ADLS_Curated_Transactions",
-                        "type": "DatasetReference",
-                        "parameters": {
-                            "MonthCode": "202501"
-                        }
-                    }
-                ],
-                "outputs": [
-                    {
-                        "referenceName": "DS_SQL_staging_transaction",
+                    "dataset": {
+                        "referenceName": "AzureSql",
                         "type": "DatasetReference"
-                    }
-                ]
+                    },
+                    "firstRowOnly": true
+                }
             },
             {
-                "name": "load_fact_transactions",
+                "name": "Update_Watermark",
                 "type": "SqlServerStoredProcedure",
                 "dependsOn": [
                     {
-                        "activity": "Transactions_CuratedToSQL",
+                        "activity": "Transaction_Curated_To_Staging",
                         "dependencyConditions": [
-                            "Completed"
+                            "Succeeded"
                         ]
                     }
                 ],
@@ -287,45 +448,16 @@
                 },
                 "userProperties": [],
                 "typeProperties": {
-                    "storedProcedureName": "[dbo].[usp_load_fact_transactions]"
+                    "storedProcedureName": "[dbo].[sp_update_watermark]"
                 },
                 "linkedServiceName": {
                     "referenceName": "LS_SQL_OpenBanking",
                     "type": "LinkedServiceReference"
                 }
-            },
-            {
-                "name": "Trigger_Data_Quality_Pipeline",
-                "type": "ExecutePipeline",
-                "dependsOn": [
-                    {
-                        "activity": "load_fact_transactions",
-                        "dependencyConditions": [
-                            "Completed"
-                        ]
-                    }
-                ],
-                "policy": {
-                    "secureInput": false
-                },
-                "userProperties": [],
-                "typeProperties": {
-                    "pipeline": {
-                        "referenceName": "PL_Data_Quality",
-                        "type": "PipelineReference"
-                    },
-                    "waitOnCompletion": true
-                }
             }
         ],
-        "parameters": {
-            "MonthCode": {
-                "type": "string",
-                "defaultValue": "202501"
-            }
-        },
         "annotations": [],
-        "lastPublishTime": "2025-12-31T00:10:12Z"
+        "lastPublishTime": "2026-01-04T10:39:10Z"
     },
     "type": "Microsoft.DataFactory/factories/pipelines"
 }
