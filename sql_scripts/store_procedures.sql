@@ -1,16 +1,41 @@
 -- load fact_transactions from staging table with basic filtering
 CREATE PROCEDURE usp_load_fact_transactions
+    @MaxLoadedDate DATETIME OUTPUT
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    INSERT INTO fact_transactions
-    SELECT *
-    FROM stg_transactions
-    WHERE Amount IS NOT NULL AND TransactionDate IS NOT NULL;
-	-- clean up staging table
-	truncate table stg_transactions
+    MERGE fact_transactions AS tgt
+    USING (
+        SELECT *
+        FROM stg_transactions
+        WHERE Amount IS NOT NULL
+          AND TransactionDate IS NOT NULL
+    ) src
+    ON tgt.TransactionID = src.TransactionID
+    WHEN MATCHED THEN
+        UPDATE SET
+            Amount = src.Amount,
+            BalanceAfter = src.BalanceAfter
+    WHEN NOT MATCHED THEN
+        INSERT (
+            TransactionID, AccountID, CustomerID, Amount,
+			Currency, MerchantName, MCC, Category, Channel,
+			City, RegionCode, IsRecurring, IsRefund, IsSalary,
+            TransactionDate, BalanceAfter
+        )
+        VALUES (
+            src.TransactionID, src.AccountID, src.CustomerID, src.Amount,
+			src.Currency, src.MerchantName, src.MCC, src.Category, src.Channel,
+			src.City, src.RegionCode, src.IsRecurring, src.IsRefund, src.IsSalary,
+            src.TransactionDate, src.BalanceAfter
+        );
+
+    SELECT @MaxLoadedDate = MAX(TransactionDate)
+    FROM stg_transactions;
 END;
+
+drop procedure usp_load_fact_transactions;
 
 -- Merchant performance report (month-over-month change) procedure
 CREATE PROCEDURE usp_merchant_mom_change
