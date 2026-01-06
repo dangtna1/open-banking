@@ -190,7 +190,6 @@ All business logic is applied **before the warehouse**.
 
 ### 4. Curated → Staging Load (Upsert Pattern)
 
-
 - Curated transaction data is **upserted** into `stg_transactions`
 - Ensures:
   - Safe reprocessing
@@ -201,22 +200,6 @@ ADF techniques:
 - Copy Activity
 - SQL-based upsert logic
 - No direct writes to fact tables
-
----
-
-### 5. Stored Procedure–Driven Fact Load
-
-ADF triggers a SQL stored procedure to move data from staging into the fact table.
-
-Responsibilities:
-- Enforce critical constraints:
-  - Amount IS NOT NULL
-  - TransactionDate IS NOT NULL
-- Apply business validation rules
-- Merge valid records into `fact_transactions`
-- Reject invalid data deterministically
-
-All enforcement is handled **inside SQL**, not ADF.
 
 Pipeline structure:
 ```
@@ -238,6 +221,22 @@ Pipeline implementation:
 ![Curating Transactions Dataflow](docs/images/PL_Load_SQL_Transactions.png)
 
 ![Curating Transactions Dataflow](docs/images/PL_Load_SQL_Transactions_Sub.png)
+
+---
+
+### 5. Stored Procedure–Driven Fact Load
+
+ADF triggers a SQL stored procedure to move data from staging into the fact table.
+
+Responsibilities:
+- Enforce critical constraints:
+  - Amount IS NOT NULL
+  - TransactionDate IS NOT NULL
+- Apply business validation rules
+- Merge valid records into `fact_transactions`
+- Reject invalid data deterministically
+
+All enforcement is handled **inside SQL**, not ADF.
 
 ---
 
