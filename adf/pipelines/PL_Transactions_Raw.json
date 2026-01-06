@@ -3,8 +3,8 @@
     "properties": {
         "activities": [
             {
-                "name": "Transaction_RawToCurated_01",
-                "type": "ExecuteDataFlow",
+                "name": "Get Transaction Metadata",
+                "type": "GetMetadata",
                 "dependsOn": [],
                 "policy": {
                     "timeout": "0.12:00:00",
@@ -15,223 +15,85 @@
                 },
                 "userProperties": [],
                 "typeProperties": {
-                    "dataflow": {
-                        "referenceName": "DFL_Curate_Transactions",
-                        "type": "DataFlowReference",
-                        "datasetParameters": {
-                            "srcTransactions": {
-                                "MonthCode": "202501"
-                            },
-                            "snkCuratedTransactions": {
-                                "MonthCode": "202501"
-                            }
-                        }
+                    "dataset": {
+                        "referenceName": "DS_ALDS_Transactions",
+                        "type": "DatasetReference"
                     },
-                    "compute": {
-                        "coreCount": 8,
-                        "computeType": "General"
+                    "fieldList": [
+                        "childItems"
+                    ],
+                    "storeSettings": {
+                        "type": "AzureBlobFSReadSettings",
+                        "recursive": true,
+                        "enablePartitionDiscovery": false
                     },
-                    "traceLevel": "Fine"
+                    "formatSettings": {
+                        "type": "DelimitedTextReadSettings"
+                    }
                 }
             },
             {
-                "name": "Transaction_RawToCurated_02",
-                "type": "ExecuteDataFlow",
+                "name": "Transaction_Raw_To_Curated",
+                "type": "ForEach",
                 "dependsOn": [
                     {
-                        "activity": "Transaction_RawToCurated_01",
+                        "activity": "Get Transaction Metadata",
                         "dependencyConditions": [
-                            "Completed"
+                            "Succeeded"
                         ]
                     }
                 ],
-                "policy": {
-                    "timeout": "0.12:00:00",
-                    "retry": 0,
-                    "retryIntervalInSeconds": 30,
-                    "secureOutput": false,
-                    "secureInput": false
-                },
                 "userProperties": [],
                 "typeProperties": {
-                    "dataflow": {
-                        "referenceName": "DFL_Curate_Transactions",
-                        "type": "DataFlowReference",
-                        "datasetParameters": {
-                            "srcTransactions": {
-                                "MonthCode": "202502"
+                    "items": {
+                        "value": "@activity('Get Transaction Metadata').output.childItems",
+                        "type": "Expression"
+                    },
+                    "activities": [
+                        {
+                            "name": "curateTransaction",
+                            "type": "ExecuteDataFlow",
+                            "dependsOn": [],
+                            "policy": {
+                                "timeout": "0.12:00:00",
+                                "retry": 0,
+                                "retryIntervalInSeconds": 30,
+                                "secureOutput": false,
+                                "secureInput": false
                             },
-                            "snkCuratedTransactions": {
-                                "MonthCode": "202502"
+                            "userProperties": [],
+                            "typeProperties": {
+                                "dataflow": {
+                                    "referenceName": "DFL_Curate_Transactions",
+                                    "type": "DataFlowReference",
+                                    "datasetParameters": {
+                                        "srcTransactions": {
+                                            "MonthCode": {
+                                                "value": "@item().name",
+                                                "type": "Expression"
+                                            }
+                                        },
+                                        "snkCuratedTransactions": {
+                                            "MonthCode": {
+                                                "value": "@item().name",
+                                                "type": "Expression"
+                                            }
+                                        }
+                                    }
+                                },
+                                "compute": {
+                                    "coreCount": 8,
+                                    "computeType": "General"
+                                },
+                                "traceLevel": "Fine"
                             }
                         }
-                    },
-                    "compute": {
-                        "coreCount": 8,
-                        "computeType": "General"
-                    },
-                    "traceLevel": "Fine"
-                }
-            },
-            {
-                "name": "Transaction_RawToCurated_03",
-                "type": "ExecuteDataFlow",
-                "dependsOn": [
-                    {
-                        "activity": "Transaction_RawToCurated_02",
-                        "dependencyConditions": [
-                            "Completed"
-                        ]
-                    }
-                ],
-                "policy": {
-                    "timeout": "0.12:00:00",
-                    "retry": 0,
-                    "retryIntervalInSeconds": 30,
-                    "secureOutput": false,
-                    "secureInput": false
-                },
-                "userProperties": [],
-                "typeProperties": {
-                    "dataflow": {
-                        "referenceName": "DFL_Curate_Transactions",
-                        "type": "DataFlowReference",
-                        "datasetParameters": {
-                            "srcTransactions": {
-                                "MonthCode": "202503"
-                            },
-                            "snkCuratedTransactions": {
-                                "MonthCode": "202503"
-                            }
-                        }
-                    },
-                    "compute": {
-                        "coreCount": 8,
-                        "computeType": "General"
-                    },
-                    "traceLevel": "Fine"
-                }
-            },
-            {
-                "name": "Transaction_RawToCurated_04",
-                "type": "ExecuteDataFlow",
-                "dependsOn": [
-                    {
-                        "activity": "Transaction_RawToCurated_03",
-                        "dependencyConditions": [
-                            "Completed"
-                        ]
-                    }
-                ],
-                "policy": {
-                    "timeout": "0.12:00:00",
-                    "retry": 0,
-                    "retryIntervalInSeconds": 30,
-                    "secureOutput": false,
-                    "secureInput": false
-                },
-                "userProperties": [],
-                "typeProperties": {
-                    "dataflow": {
-                        "referenceName": "DFL_Curate_Transactions",
-                        "type": "DataFlowReference",
-                        "datasetParameters": {
-                            "srcTransactions": {
-                                "MonthCode": "202504"
-                            },
-                            "snkCuratedTransactions": {
-                                "MonthCode": "202504"
-                            }
-                        }
-                    },
-                    "compute": {
-                        "coreCount": 8,
-                        "computeType": "General"
-                    },
-                    "traceLevel": "Fine"
-                }
-            },
-            {
-                "name": "Transaction_RawToCurated_05",
-                "type": "ExecuteDataFlow",
-                "dependsOn": [
-                    {
-                        "activity": "Transaction_RawToCurated_04",
-                        "dependencyConditions": [
-                            "Completed"
-                        ]
-                    }
-                ],
-                "policy": {
-                    "timeout": "0.12:00:00",
-                    "retry": 0,
-                    "retryIntervalInSeconds": 30,
-                    "secureOutput": false,
-                    "secureInput": false
-                },
-                "userProperties": [],
-                "typeProperties": {
-                    "dataflow": {
-                        "referenceName": "DFL_Curate_Transactions",
-                        "type": "DataFlowReference",
-                        "datasetParameters": {
-                            "srcTransactions": {
-                                "MonthCode": "202505"
-                            },
-                            "snkCuratedTransactions": {
-                                "MonthCode": "202505"
-                            }
-                        }
-                    },
-                    "compute": {
-                        "coreCount": 8,
-                        "computeType": "General"
-                    },
-                    "traceLevel": "Fine"
-                }
-            },
-            {
-                "name": "Transaction_RawToCurated_06",
-                "type": "ExecuteDataFlow",
-                "dependsOn": [
-                    {
-                        "activity": "Transaction_RawToCurated_05",
-                        "dependencyConditions": [
-                            "Completed"
-                        ]
-                    }
-                ],
-                "policy": {
-                    "timeout": "0.12:00:00",
-                    "retry": 0,
-                    "retryIntervalInSeconds": 30,
-                    "secureOutput": false,
-                    "secureInput": false
-                },
-                "userProperties": [],
-                "typeProperties": {
-                    "dataflow": {
-                        "referenceName": "DFL_Curate_Transactions",
-                        "type": "DataFlowReference",
-                        "datasetParameters": {
-                            "srcTransactions": {
-                                "MonthCode": "202506"
-                            },
-                            "snkCuratedTransactions": {
-                                "MonthCode": "202506"
-                            }
-                        }
-                    },
-                    "compute": {
-                        "coreCount": 8,
-                        "computeType": "General"
-                    },
-                    "traceLevel": "Fine"
+                    ]
                 }
             }
         ],
         "annotations": [],
-        "lastPublishTime": "2025-11-14T02:54:50Z"
+        "lastPublishTime": "2026-01-03T18:58:39Z"
     },
     "type": "Microsoft.DataFactory/factories/pipelines"
 }
