@@ -113,6 +113,8 @@ A **staging table** is introduced to enforce quality gates before data reaches t
 
 ### stg_transactions
 
+![Star Schema](docs/images/Query_Editor_Staging_Transactions.png)
+
 Purpose:
 - Temporary landing table for curated data
 - Acts as a quality buffer
@@ -188,6 +190,7 @@ All business logic is applied **before the warehouse**.
 
 ### 4. Curated → Staging Load (Upsert Pattern)
 
+
 - Curated transaction data is **upserted** into `stg_transactions`
 - Ensures:
   - Safe reprocessing
@@ -215,11 +218,34 @@ Responsibilities:
 
 All enforcement is handled **inside SQL**, not ADF.
 
+Pipeline structure:
+```
+
+PL_Load_SQL_Transactions
+├── Lookup_Watermark
+├── GetMetadata
+├── ForEach (months)
+│     └── If (month >= watermark)
+│           ├── Copy → staging (UPSERT)
+│           ├── usp_load_fact_transactions
+│           └── Execute PL_Data_Quality
+└── Update_Watermark
+
+```
+
+Pipeline implementation:
+
+![Curating Transactions Dataflow](docs/images/PL_Load_SQL_Transactions.png)
+
+![Curating Transactions Dataflow](docs/images/PL_Load_SQL_Transactions_Sub.png)
+
 ---
 
 ### 6. Data Quality Pipeline
 
 A dedicated **Data Quality pipeline** runs after the fact load.
+
+![Curating Transactions Dataflow](docs/images/PL_Data_Quality.png)
 
 Implemented checks:
 - Null checks on key fields
@@ -234,13 +260,7 @@ Each check:
 - Fails the pipeline immediately
 
 Pipeline structure:
-
 ```
-
-Pipeline_Load_Transactions
-├── Copy → Staging (Upsert)
-├── Stored Procedure → Load Fact
-└── Trigger → Pipeline_Data_Quality
 
 Pipeline_Data_Quality
 ├── usp_dq_check_nulls
